@@ -1,0 +1,38 @@
+{
+  "private": true,
+  "name": "ivi-todomvc",
+  "version": "1.0.0",
+  "description": "ivi TodoMVC",
+  "license": "MIT",
+  "author": {
+    "name": "Boris Kaul",
+    "email": "localvoid@gmail.com",
+    "url": "https://github.com/localvoid"
+  },
+  "scripts": {
+    "build:routes": "ts-node -P ./routes/ ./routes/routes.config.ts > ./src/routes.ts",
+    "serve": "webpack-dev-server",
+    "dist": "webpack --config webpack.config.prod.js"
+  },
+  "dependencies": {
+    "ivi": "^0.5.0",
+    "routekit-resolver": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.7",
+    "babel-core": "^6.23.1",
+    "babel-loader": "^6.3.2",
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-es2016": "^6.22.0",
+    "ivi-tslint-rules": "^0.1.0",
+    "routekit": "^0.1.0",
+    "source-map-loader": "^0.1.6",
+    "ts-loader": "^2.0.1",
+    "ts-node": "^2.1.0",
+    "tslib": "^1.6.0",
+    "typescript": "^2.3.0-dev.20170223",
+    "webpack": "^2.2.1",
+    "webpack-dev-server": "^2.4.1",
+    "webpack-merge": "^3.0.0"
+  }
+}
