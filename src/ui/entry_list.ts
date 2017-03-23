@@ -51,24 +51,23 @@ class Entry extends Component<TodoEntry> {
 
     render() {
         const entry = this.props;
-        const view = $h("div", "view").children([
+        const view = $h("div", "view").children(
             $i("checkbox", "toggle").events(this.onChangeToggle).checked(entry.isCompleted),
             $h("label").events(this.onLabelDoubleClick).children(entry.text),
             $h("button", "destroy").events(this.onClickDestroy),
-        ]);
+        );
         if (this.editing) {
-            return $h("li", entry.isCompleted ? "editing completed" : "editing")
-                .children([
-                    view,
-                    $i("text", "edit")
-                        .events({
-                            input: this.onTitleChange,
-                            blur: this.onBlur,
-                            keyDown: this.onKeyDown,
-                        })
-                        .value(this.editText)
-                        .autofocus(true),
-                ]);
+            return $h("li", entry.isCompleted ? "editing completed" : "editing").children(
+                view,
+                $i("text", "edit")
+                    .events([
+                        this.onTitleChange,
+                        this.onBlur,
+                        this.onKeyDown,
+                    ])
+                    .value(this.editText)
+                    .autofocus(true),
+            );
         }
 
         return $h("li", entry.isCompleted ? "completed" : undefined)

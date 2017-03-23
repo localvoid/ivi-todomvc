@@ -18,21 +18,20 @@ export class Header extends Component {
     });
 
     render() {
-        return $h("header")
-            .children([
-                $h("h1").children("todos"),
-                $i("text")
-                    .props({
-                        "id": "new-todo",
-                        "placeholder": "What needs to be done",
-                    })
-                    .events({
-                        keyDown: this.onKeyDown,
-                        input: this.onInput,
-                    })
-                    .value(this.inputValue)
-                    .autofocus(true),
-            ]);
+        return $h("header").children(
+            $h("h1").children("todos"),
+            $i("text")
+                .props({
+                    "id": "new-todo",
+                    "placeholder": "What needs to be done",
+                })
+                .events([
+                    this.onKeyDown,
+                    this.onInput,
+                ])
+                .value(this.inputValue)
+                .autofocus(true),
+        );
     }
 }
 

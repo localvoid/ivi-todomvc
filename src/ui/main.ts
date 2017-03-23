@@ -53,11 +53,10 @@ const $ToggleAll = connect(
 );
 
 function Main() {
-    return $h("section").props({ "id": "main" })
-        .children([
-            $ToggleAll(),
-            $EntryList(),
-        ]);
+    return $h("section").props({ "id": "main" }).children(
+        $ToggleAll(),
+        $EntryList(),
+    );
 }
 
 export function $Main() {
