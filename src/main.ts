@@ -1,8 +1,10 @@
-import { render } from "ivi";
+import { render, context, selectorDataRef } from "ivi";
 import { RouteNode, ResolveResult, resolve } from "routekit-resolver";
 import { ROUTES } from "./routes";
 import { setFilter } from "./actions";
-import { $App } from "./ui/app";
+import { app } from "./ui/app";
+import { getStore } from "./store";
+import { SelectCompletedCountState } from "./selectors";
 
 function initRouter<T>(
   extractPath: (location: Location) => string,
@@ -42,4 +44,13 @@ initRouter<number>(
   },
 );
 
-render($App(), document.getElementById("todoapp")!);
+render(
+  context(
+    {
+      store: getStore(),
+      completedCount: selectorDataRef<SelectCompletedCountState>(),
+    },
+    app(),
+  ),
+  document.getElementById("todoapp")!,
+);

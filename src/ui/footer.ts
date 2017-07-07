@@ -1,11 +1,11 @@
-import { Component, selectorData, connect } from "ivi";
+import { Context, Component, SelectorDataRef, selectorData, connect } from "ivi";
 import * as Events from "ivi-events";
 import * as h from "ivi-html";
 import { FilterType } from "../constants";
 import { clearCompleted } from "../actions";
-import { getStore } from "../store";
+import { Store } from "../state";
 import {
-  selectListedCount, memoizedSelectCompletedCount, SelectListedCountState, SelectCompletedCountState,
+  selectListedCount, selectCompletedCount, SelectListedCountState, SelectCompletedCountState,
 } from "../selectors";
 
 interface FooterProps {
@@ -59,11 +59,15 @@ interface FooterSelect {
 }
 
 export const footer = connect(
-  function (prev: FooterSelect | null) {
-    const state = getStore().getState();
+  function (
+    prev: FooterSelect | null,
+    _props: null,
+    context: Context<{ store: Store, completedCount: SelectorDataRef<SelectCompletedCountState> }>,
+  ) {
+    const state = context.store.getState();
     const filter = state.filter;
-    const listedCount = selectListedCount(prev ? prev.in.listedCount : null);
-    const completedCount = memoizedSelectCompletedCount(null);
+    const listedCount = selectListedCount(prev ? prev.in.listedCount : null, null, context);
+    const completedCount = selectCompletedCount(null, null, context);
 
     if (
       prev &&

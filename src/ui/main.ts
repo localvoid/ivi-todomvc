@@ -1,9 +1,10 @@
-import { Component, componentFactory, selectorData, connect } from "ivi";
+import { Context, Component, SelectorDataRef, componentFactory, selectorData, connect } from "ivi";
 import * as Events from "ivi-events";
 import * as h from "ivi-html";
 import { completeAll } from "../actions";
+import { Store } from "../state";
 import {
-  selectListedCount, memoizedSelectCompletedCount, SelectListedCountState, SelectCompletedCountState,
+  selectListedCount, selectCompletedCount, SelectListedCountState, SelectCompletedCountState,
 } from "../selectors";
 import { entryList } from "./entry_list";
 
@@ -35,9 +36,13 @@ interface ToggleAllSelect {
 }
 
 const toggleAll = connect(
-  function (prev: ToggleAllSelect | null) {
-    const listedCount = selectListedCount(prev ? prev.in.listedCount : null);
-    const completedCount = memoizedSelectCompletedCount(null);
+  function (
+    prev: ToggleAllSelect | null,
+    _props: null,
+    context: Context<{ store: Store, completedCount: SelectorDataRef<SelectCompletedCountState> }>,
+  ) {
+    const listedCount = selectListedCount(prev ? prev.in.listedCount : null, null, context);
+    const completedCount = selectCompletedCount(null, null, context);
 
     if (prev && prev.in.listedCount === listedCount && prev.in.completedCount === completedCount) {
       return prev;

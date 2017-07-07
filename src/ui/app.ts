@@ -13,4 +13,4 @@ function App(listedCount: number) {
     );
 }
 
-export const $App = connect(selectListedCount, App);
+export const app = connect(selectListedCount, App);

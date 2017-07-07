@@ -1,16 +1,19 @@
-import { selectorData, memoizeSelector } from "ivi";
+import { Context, SelectorDataRef, selectorData } from "ivi";
 import { Mutable } from "ivi-state";
 import { FilterType } from "./constants";
-import { TodoEntry } from "./state";
-import { getStore } from "./store";
+import { Store, TodoEntry } from "./state";
 
 export interface SelectTodoById {
   in: TodoEntry;
   out: TodoEntry;
 }
 
-export function selectTodoById(prev: SelectTodoById | null, id: number): SelectTodoById {
-  const state = getStore().getState();
+export function selectTodoById(
+  prev: SelectTodoById | null,
+  id: number,
+  context: Context<{ store: Store }>,
+): SelectTodoById {
+  const state = context.store.getState();
   const todo = state.todos.byId.ref.get(id)!;
 
   if (prev && prev.in === todo) {
@@ -29,8 +32,12 @@ export interface SelectVisibleTodoIdsState {
   out: number[];
 }
 
-export function selectVisibleTodoIds(prev: SelectVisibleTodoIdsState | null): SelectVisibleTodoIdsState {
-  const state = getStore().getState();
+export function selectVisibleTodoIds(
+  prev: SelectVisibleTodoIdsState | null,
+  _props: null,
+  context: Context<{ store: Store }>,
+): SelectVisibleTodoIdsState {
+  const state = context.store.getState();
   const listedIds = state.todos.listedIds;
   const byId = state.todos.byId;
   const filter = state.filter;
@@ -68,8 +75,12 @@ export interface SelectListedCountState {
   out: number;
 }
 
-export function selectListedCount(prev: SelectListedCountState | null): SelectListedCountState {
-  const state = getStore().getState();
+export function selectListedCount(
+  prev: SelectListedCountState | null,
+  _props: null,
+  context: Context<{ store: Store }>,
+): SelectListedCountState {
+  const state = context.store.getState();
   const listedIds = state.todos.listedIds;
 
   if (prev && prev.in === listedIds) {
@@ -87,11 +98,18 @@ export interface SelectCompletedCountState {
   out: number;
 }
 
-export function selectCompletedCount(prev: SelectCompletedCountState | null): SelectCompletedCountState {
-  const state = getStore().getState();
+export function selectCompletedCount(
+  _prev: SelectCompletedCountState | null,
+  _props: null,
+  context: Context<{
+    store: Store,
+    completedCount: SelectorDataRef<SelectCompletedCountState>,
+  }>,
+): SelectCompletedCountState {
+  const state = context.store.getState();
   const listedIds = state.todos.listedIds;
   const byId = state.todos.byId;
-
+  const prev = context.completedCount.ref;
   if (prev && prev.in.listedIds === listedIds && prev.in.byId === byId) {
     return prev;
   }
@@ -104,14 +122,5 @@ export function selectCompletedCount(prev: SelectCompletedCountState | null): Se
     }
   }
 
-  return selectorData({ listedIds, byId }, c);
+  return context.completedCount.ref = selectorData({ listedIds, byId }, c);
 }
-
-let _completedCount: SelectCompletedCountState | null = null;
-
-export const memoizedSelectCompletedCount = memoizeSelector(selectCompletedCount, (v) => {
-  if (v !== undefined) {
-    _completedCount = v;
-  }
-  return _completedCount;
-});
