@@ -21,7 +21,7 @@ class ToggleAll extends Component<ToggleAllProps> {
 
   render() {
     return h.inputCheckbox()
-      .props({ "id": "toggle-all" })
+      .attrs({ "id": "toggle-all" })
       .events(this.onChange)
       .checked(this.props.completedCount === this.props.listedCount);
   }
@@ -60,7 +60,7 @@ const toggleAll = connect(
 );
 
 function Main() {
-  return h.section().props({ "id": "main" }).children(
+  return h.section().attrs({ "id": "main" }).children(
     toggleAll(),
     entryList(),
   );

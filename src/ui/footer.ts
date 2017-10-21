@@ -24,24 +24,24 @@ class Footer extends Component<FooterProps> {
     const { filter, listedCount, completedCount } = this.props;
     const activeCount = listedCount - completedCount;
 
-    return h.footer().props({ id: "footer" }).children(
-      h.ul().props({ "id": "filters" }).children(
+    return h.footer().attrs({ id: "footer" }).children(
+      h.ul().attrs({ "id": "filters" }).children(
         h.li().children(h.a(filter === FilterType.ShowAll ? "selected" : undefined)
-          .props({ "href": "#/" }).children("All")),
+          .attrs({ "href": "#/" }).children("All")),
         " ",
         h.li().children(h.a(filter === FilterType.ShowActive ? "selected" : undefined)
-          .props({ "href": "#/active" }).children("Active")),
+          .attrs({ "href": "#/active" }).children("Active")),
         " ",
         h.li().children(h.a(filter === FilterType.ShowCompleted ? "selected" : undefined)
-          .props({ "href": "#/completed" }).children("Completed")),
+          .attrs({ "href": "#/completed" }).children("Completed")),
       ),
-      h.span().props({ "id": "todo-count" }).children(
+      h.span().attrs({ "id": "todo-count" }).children(
         h.strong().children(activeCount ? activeCount : "No"),
         (activeCount === 1) ? " item left" : " items left",
       ),
       (completedCount > 0) ?
         h.button()
-          .props({ "id": "clear-completed" })
+          .attrs({ "id": "clear-completed" })
           .events(this.onClickClearCompleted)
           .children(`Clear completed (${completedCount})`) :
         null,

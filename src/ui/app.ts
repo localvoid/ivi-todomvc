@@ -6,11 +6,11 @@ import { footer } from "./footer";
 import { main } from "./main";
 
 function App(listedCount: number) {
-    return h.section().children(
-        header(),
-        listedCount ? main() : null,
-        listedCount ? footer() : null,
-    );
+  return h.section().children(
+    header(),
+    listedCount ? main() : null,
+    listedCount ? footer() : null,
+  );
 }
 
 export const app = connect(selectListedCount, App);

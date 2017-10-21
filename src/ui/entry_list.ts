@@ -33,7 +33,7 @@ class Entry extends Component<TodoEntry> {
     this.editText = "";
     this.editing = false;
     this.invalidate();
-  });
+  }, true);
 
   private onKeyDown = Events.onKeyDown((ev) => {
     switch (ev.keyCode) {
@@ -61,7 +61,7 @@ class Entry extends Component<TodoEntry> {
     if (this.editing) {
       return h.li(entry.isCompleted ? "editing completed" : "editing").children(
         view,
-        h.inputText("edit")
+        h.input("edit")
           .events([
             this.onTitleChange,
             this.onBlur,
@@ -83,7 +83,7 @@ const entry = connect(
 
 function EntryList(visibleIds: number[]) {
   return h.ul()
-    .props({ "id": "todo-list" })
+    .attrs({ "id": "todo-list" })
     .children(map(visibleIds, (id) => entry(id).key(id)));
 }
 

@@ -22,8 +22,8 @@ export class Header extends Component {
   render() {
     return h.header().children(
       h.h1().children("todos"),
-      h.inputText()
-        .props({
+      h.input()
+        .attrs({
           "id": "new-todo",
           "placeholder": "What needs to be done",
         })

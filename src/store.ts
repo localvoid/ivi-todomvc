@@ -1,4 +1,4 @@
-import { update } from "ivi";
+import { updateNextFrame } from "ivi";
 import { createStore, mut } from "ivi-state";
 import { FilterType } from "./constants";
 import { TodoEntry, State } from "./state";
@@ -17,7 +17,7 @@ function initAppState(): State {
 const _store = createStore(
   initAppState(),
   appState,
-  update,
+  updateNextFrame,
 );
 
 export function getStore() {
