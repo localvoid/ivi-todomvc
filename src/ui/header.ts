@@ -1,36 +1,36 @@
 import { Component, componentFactory, KeyCode } from "ivi";
 import * as Events from "ivi-events";
 import * as h from "ivi-html";
-import { addTodo } from "../actions";
+import { createEntry } from "../state";
+
+const INPUT_ATTRS = {
+  "id": "new-todo",
+  "placeholder": "What needs to be done",
+};
 
 export class Header extends Component {
   private inputValue = "";
 
-  private onKeyDown = Events.onKeyDown((ev) => {
-    if (ev.keyCode === KeyCode.Enter) {
-      addTodo(this.inputValue);
-      this.inputValue = "";
+  private inputEvents = [
+    Events.onKeyDown((ev) => {
+      if (ev.keyCode === KeyCode.Enter) {
+        createEntry(this.inputValue);
+        this.inputValue = "";
+        this.invalidate();
+      }
+    }),
+    Events.onInput((ev) => {
+      this.inputValue = (ev.target as HTMLInputElement).value;
       this.invalidate();
-    }
-  });
-
-  private onInput = Events.onInput((ev) => {
-    this.inputValue = (ev.target as HTMLInputElement).value;
-    this.invalidate();
-  });
+    })
+  ];
 
   render() {
-    return h.header().children(
-      h.h1().children("todos"),
+    return h.header().c(
+      h.h1().c("todos"),
       h.input()
-        .attrs({
-          "id": "new-todo",
-          "placeholder": "What needs to be done",
-        })
-        .events([
-          this.onKeyDown,
-          this.onInput,
-        ])
+        .a(INPUT_ATTRS)
+        .e(this.inputEvents)
         .value(this.inputValue)
         .autofocus(true),
     );

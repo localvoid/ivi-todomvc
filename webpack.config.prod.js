@@ -2,6 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 
 module.exports = {
+  mode: "production",
   entry: "./src/main.ts",
   output: {
     filename: "bundle.js",
@@ -10,26 +11,9 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
-        use: [
-          {
-            loader: "babel-loader",
-            options: {
-              presets: ["es2015", "es2016"],
-            },
-          },
-        ],
-      },
-      {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: [
-          {
-            loader: "babel-loader",
-            options: {
-              presets: ["es2015", "es2016"],
-            },
-          },
           {
             loader: "ts-loader",
             options: {
@@ -42,22 +26,8 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      "__IVI_DEV__": false,
-      "__IVI_BROWSER__": true,
-    }),
-    new webpack.LoaderOptionsPlugin({
-      minimize: true,
-      debug: false,
-    }),
-    new webpack.optimize.UglifyJsPlugin({
-      beautify: false,
-      mangle: {
-        screw_ie8: true,
-      },
-      compress: {
-        screw_ie8: true,
-      },
-      comments: false,
+      "DEBUG": "false",
+      "TARGET": JSON.stringify("browser"),
     }),
   ],
   resolve: {

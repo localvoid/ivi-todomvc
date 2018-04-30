@@ -1,12 +1,8 @@
-import { Context, Component, SelectorDataRef, selectorData, connect } from "ivi";
+import { Component, connect, componentFactory } from "ivi";
 import * as Events from "ivi-events";
 import * as h from "ivi-html";
-import { FilterType } from "../constants";
-import { clearCompleted } from "../actions";
-import { Store } from "../state";
-import {
-  selectListedCount, selectCompletedCount, SelectListedCountState, SelectCompletedCountState,
-} from "../selectors";
+import { FilterType, TodoEntry, query, removeCompleted } from "../state";
+import { QueryResult, Box } from "ivi-state";
 
 interface FooterProps {
   filter: FilterType;
@@ -17,75 +13,81 @@ interface FooterProps {
 class Footer extends Component<FooterProps> {
   onClickClearCompleted = Events.onClick((ev) => {
     ev.preventDefault();
-    clearCompleted();
+    removeCompleted();
   });
 
   render() {
     const { filter, listedCount, completedCount } = this.props;
     const activeCount = listedCount - completedCount;
 
-    return h.footer().attrs({ id: "footer" }).children(
-      h.ul().attrs({ "id": "filters" }).children(
-        h.li().children(h.a(filter === FilterType.ShowAll ? "selected" : undefined)
-          .attrs({ "href": "#/" }).children("All")),
+    return h.footer().a({ id: "footer" }).c(
+      h.ul().a({ "id": "filters" }).c(
+        h.li().c(
+          h.a(filter === FilterType.ShowAll ? "selected" : undefined)
+            .a({ "href": "#/" })
+            .c("All"),
+        ),
         " ",
-        h.li().children(h.a(filter === FilterType.ShowActive ? "selected" : undefined)
-          .attrs({ "href": "#/active" }).children("Active")),
+        h.li().c(
+          h.a(filter === FilterType.ShowActive ? "selected" : undefined)
+            .a({ "href": "#/active" })
+            .c("Active"),
+        ),
         " ",
-        h.li().children(h.a(filter === FilterType.ShowCompleted ? "selected" : undefined)
-          .attrs({ "href": "#/completed" }).children("Completed")),
+        h.li().c(
+          h.a(filter === FilterType.ShowCompleted ? "selected" : undefined)
+            .a({ "href": "#/completed" })
+            .c("Completed"),
+        ),
       ),
-      h.span().attrs({ "id": "todo-count" }).children(
-        h.strong().children(activeCount ? activeCount : "No"),
+      h.span().a({ "id": "todo-count" }).c(
+        h.strong().c(activeCount ? activeCount : "No"),
         (activeCount === 1) ? " item left" : " items left",
       ),
       (completedCount > 0) ?
         h.button()
-          .attrs({ "id": "clear-completed" })
-          .events(this.onClickClearCompleted)
-          .children(`Clear completed (${completedCount})`) :
+          .a({ "id": "clear-completed" })
+          .e(this.onClickClearCompleted)
+          .c(`Clear completed (${completedCount})`) :
         null,
     );
   }
 }
 
-interface FooterSelect {
-  in: {
+export const footer = componentFactory(Footer);
+
+export const footerConnector = connect<
+  {
     filter: FilterType,
-    listedCount: SelectListedCountState,
-    completedCount: SelectCompletedCountState,
-  };
-  out: FooterProps;
-}
+    entries: QueryResult<Box<TodoEntry>[]>,
+    completedEntries: QueryResult<Box<TodoEntry>[]>,
+    props: FooterProps,
+  }
+  >(
+    (prev) => {
+      const filter = query().filter();
+      const entries = query().allEntries.get();
+      const completedEntries = query().completedEntries.get();
 
-export const footer = connect(
-  function (
-    prev: FooterSelect | null,
-    _props: null,
-    context: Context<{ store: Store, completedCount: SelectorDataRef<SelectCompletedCountState> }>,
-  ) {
-    const state = context.store.getState();
-    const filter = state.filter;
-    const listedCount = selectListedCount(prev ? prev.in.listedCount : null, null, context);
-    const completedCount = selectCompletedCount(null, null, context);
+      if (
+        prev !== null &&
+        prev.filter === filter &&
+        prev.entries === entries &&
+        prev.completedEntries === completedEntries
+      ) {
+        return prev;
+      }
 
-    if (
-      prev &&
-      prev.in.filter === filter &&
-      prev.in.listedCount === listedCount &&
-      prev.in.completedCount === completedCount
-    ) {
-      return prev;
-    }
-
-    return selectorData(
-      { filter, listedCount, completedCount },
-      {
+      return {
         filter,
-        listedCount: listedCount.out,
-        completedCount: completedCount.out,
-      },
-    );
-  },
-  Footer,
+        entries,
+        completedEntries,
+        props: {
+          filter,
+          listedCount: entries.result.length,
+          completedCount: completedEntries.result.length,
+        },
+      };
+    },
+    ({ props }) => footer(props),
 );

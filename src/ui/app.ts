@@ -1,16 +1,26 @@
 import { connect } from "ivi";
 import * as h from "ivi-html";
-import { selectListedCount } from "../selectors";
+import { QueryResult, Box } from "ivi-state";
+import { query, TodoEntry } from "../state";
 import { header } from "./header";
-import { footer } from "./footer";
+import { footerConnector } from "./footer";
 import { main } from "./main";
 
-function App(listedCount: number) {
-  return h.section().children(
-    header(),
-    listedCount ? main() : null,
-    listedCount ? footer() : null,
-  );
-}
+export const app = connect<{ entries: QueryResult<Box<TodoEntry>[]>, count: number }>(
+  (prev) => {
+    const entries = query().allEntries.get();
 
-export const app = connect(selectListedCount, App);
+    if (prev !== null && prev.entries === entries) {
+      return prev;
+    }
+
+    return { entries, count: entries.result.length };
+  },
+  ({ count }) => (
+    h.section().c(
+      header(),
+      count ? main() : null,
+      count ? footerConnector() : null,
+    )
+  ),
+);

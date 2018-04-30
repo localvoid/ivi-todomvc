@@ -1,68 +1,61 @@
-import { Context, Component, SelectorDataRef, componentFactory, selectorData, connect } from "ivi";
+import { Component, componentFactory, connect, statelessComponentFactory } from "ivi";
 import * as Events from "ivi-events";
 import * as h from "ivi-html";
-import { completeAll } from "../actions";
-import { Store } from "../state";
-import {
-  selectListedCount, selectCompletedCount, SelectListedCountState, SelectCompletedCountState,
-} from "../selectors";
-import { entryList } from "./entry_list";
+import { QueryResult, Box } from "ivi-state";
+import { TodoEntry, query, toggleAll } from "../state";
+import { entryListConnector } from "./entry_list";
 
 interface ToggleAllProps {
   listedCount: number;
   completedCount: number;
 }
 
-class ToggleAll extends Component<ToggleAllProps> {
+class ToggleAllView extends Component<ToggleAllProps> {
   private onChange = Events.onChange((ev) => {
     ev.preventDefault();
-    completeAll();
+    toggleAll();
   });
 
   render() {
     return h.inputCheckbox()
-      .attrs({ "id": "toggle-all" })
-      .events(this.onChange)
+      .a({ "id": "toggle-all" })
+      .e(this.onChange)
       .checked(this.props.completedCount === this.props.listedCount);
   }
 }
+const toggleAllView = componentFactory(ToggleAllView);
 
-interface ToggleAllSelect {
-  in: {
-    listedCount: SelectListedCountState,
-    completedCount: SelectCompletedCountState,
-  };
-  out: ToggleAllProps;
-}
+const toggleAllConnector = connect<
+  {
+    entries: QueryResult<Box<TodoEntry>[]>,
+    completedEntries: QueryResult<Box<TodoEntry>[]>,
+    props: ToggleAllProps,
+  }
+  >(
+    (prev) => {
+      const entries = query().allEntries.get();
+      const completedEntries = query().completedEntries.get();
 
-const toggleAll = connect(
-  function (
-    prev: ToggleAllSelect | null,
-    _props: null,
-    context: Context<{ store: Store, completedCount: SelectorDataRef<SelectCompletedCountState> }>,
-  ) {
-    const listedCount = selectListedCount(prev ? prev.in.listedCount : null, null, context);
-    const completedCount = selectCompletedCount(null, null, context);
+      if (prev !== null && prev.entries === entries && prev.completedEntries === completedEntries) {
+        return prev;
+      }
 
-    if (prev && prev.in.listedCount === listedCount && prev.in.completedCount === completedCount) {
-      return prev;
-    }
-
-    return selectorData(
-      { listedCount, completedCount },
-      {
-        listedCount: listedCount.out,
-        completedCount: completedCount.out,
-      },
-    );
-  },
-  ToggleAll,
+      return {
+        entries,
+        completedEntries,
+        props: {
+          listedCount: entries.result.length,
+          completedCount: completedEntries.result.length,
+        },
+      };
+    },
+    ({ props }) => toggleAllView(props),
 );
 
 function Main() {
-  return h.section().attrs({ "id": "main" }).children(
-    toggleAll(),
-    entryList(),
+  return h.section().a({ "id": "main" }).c(
+    toggleAllConnector(),
+    entryListConnector(),
   );
 }
-export const main = componentFactory(Main);
+export const main = statelessComponentFactory(Main);

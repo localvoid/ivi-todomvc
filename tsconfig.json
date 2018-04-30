@@ -18,14 +18,11 @@
       "dom"
     ],
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": true,
+    "strict": true,
     "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "strictNullChecks": true
+    "noUnusedLocals": true
   },
   "include": [
     "src/**/*.ts"
-  ],
-  "compileOnSave": false
+  ]
 }

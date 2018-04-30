@@ -1,5 +1,5 @@
 import { Builder, HttpMethod, jsEmitter } from "routekit";
-import { FilterType } from "../src/constants";
+import { FilterType } from "../src/state";
 
 const routes = new Builder();
 

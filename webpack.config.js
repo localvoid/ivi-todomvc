@@ -2,6 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 
 module.exports = {
+  mode: "development",
   entry: "./src/main.ts",
   output: {
     filename: "bundle.js",
@@ -30,11 +31,8 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      "__IVI_DEV__": true,
-      "__IVI_BROWSER__": true,
-    }),
-    new webpack.SourceMapDevToolPlugin({
-      test: /\.(ts|js)$/,
+      "DEBUG": "true",
+      "TARGET": JSON.stringify("browser"),
     }),
   ],
   resolve: {
