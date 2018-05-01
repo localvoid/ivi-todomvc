@@ -1,7 +1,7 @@
 import { render } from "ivi";
 import { RouteNode, ResolveResult, resolve } from "routekit-resolver";
 import { ROUTES } from "./routes";
-import { app } from "./ui/app";
+import { app } from "./ui";
 import { setFilter } from "./state";
 
 function initRouter<T>(
@@ -14,7 +14,7 @@ function initRouter<T>(
   let path = extractPath(loc);
   onChange(resolve<T>(routes, path, mergeData));
 
-  window.addEventListener("hashchange", function () {
+  window.addEventListener("hashchange", () => {
     const newPath = extractPath(loc);
     if (path !== newPath) {
       path = newPath;
@@ -24,23 +24,17 @@ function initRouter<T>(
 }
 
 initRouter<number>(
-  (location: Location) => {
+  (location) => {
     const path = decodeURIComponent(location.hash);
-    if (path.length > 1) {
-      return path.slice(1);
-    }
-    return "/";
+    return (path.length > 1) ? path.slice(1) : "/";
   },
   ROUTES,
   (a, b) => b!,
-  (result: ResolveResult<number> | null) => {
+  (result) => {
     if (result) {
       setFilter(result.data!);
     }
   },
 );
 
-render(
-  app(),
-  document.getElementById("todoapp")!,
-);
+render(app(), document.getElementById("todoapp")!);

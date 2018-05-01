@@ -7,9 +7,9 @@ function r(name: string, path: string, data: FilterType) {
   routes.add(name, path, HttpMethod.GET, JSON.stringify(data));
 }
 
-r("home", "/", FilterType.ShowAll);
-r("completed", "/completed", FilterType.ShowCompleted);
-r("active", "/active", FilterType.ShowActive);
+r("home", "/", FilterType.All);
+r("completed", "/completed", FilterType.Completed);
+r("active", "/active", FilterType.Active);
 
 process.stdout.write(jsEmitter({
   target: "ts",
