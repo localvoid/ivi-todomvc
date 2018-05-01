@@ -222,12 +222,7 @@ const entryListConnector = connect<
     ),
 );
 
-interface ToggleAllProps {
-  allCount: number;
-  completedCount: number;
-}
-
-class ToggleAllView extends Component<ToggleAllProps> {
+class ToggleAllView extends Component<boolean> {
   private onChange = Events.onChange((ev) => {
     ev.preventDefault();
     toggleAll();
@@ -237,33 +232,14 @@ class ToggleAllView extends Component<ToggleAllProps> {
     return h.inputCheckbox()
       .a({ "id": "toggle-all" })
       .e(this.onChange)
-      .checked(this.props.completedCount === this.props.allCount);
+      .checked(this.props);
   }
 }
 const toggleAllView = componentFactory(ToggleAllView);
 
-const toggleAllConnector = connect<
-  {
-    entries: QueryResult<Box<TodoEntry>[]>,
-    completedEntries: QueryResult<Box<TodoEntry>[]>,
-    props: ToggleAllProps,
-  }
-  >(
-    (prev) => {
-      const entries = query().allEntries.get();
-      const completedEntries = query().completedEntries.get();
-
-      return (prev !== null && prev.entries === entries && prev.completedEntries === completedEntries) ? prev :
-        {
-          entries,
-          completedEntries,
-          props: {
-            allCount: entries.result.length,
-            completedCount: completedEntries.result.length,
-          },
-        };
-    },
-    ({ props }) => toggleAllView(props),
+const toggleAllConnector = connect<boolean>(
+  (prev) => query().allEntries.get().result.length === query().completedEntries.get().result.length,
+  (checked) => toggleAllView(checked),
 );
 
 const main = statelessComponentFactory(() => (
