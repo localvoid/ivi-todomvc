@@ -10,7 +10,7 @@
     "url": "https://github.com/localvoid"
   },
   "scripts": {
-    "build:routes": "ts-node -P ./routes/ ./routes/routes.config.ts > ./src/routes.ts",
+    "build:routes": "ts-node -P ./routes/tsconfig.json ./routes/routes.config.ts > ./src/routes.ts",
     "serve": "webpack-dev-server",
     "dist": "webpack --config webpack.config.prod.js"
   },
@@ -22,16 +22,18 @@
     "ivi-html": "^0.10.0",
     "ivi-scheduler": "^0.10.0",
     "ivi-state": "^0.10.0",
-    "routekit-resolver": "^0.1.0"
+    "routekit-resolver": "^0.4.1"
   },
   "devDependencies": {
     "@types/node": "^9.0.0",
     "ivi-tslint-rules": "^0.1.3",
-    "routekit": "^0.1.0",
+    "routekit": "^0.4.1",
+    "routekit-js": "^0.5.0",
     "source-map-loader": "^0.2.3",
     "ts-loader": "^4.2.0",
     "ts-node": "^6.0.1",
     "tslib": "^1.9.0",
+    "tslint": "^5.9.1",
     "typescript": "^2.8.3",
     "webpack": "^4.6.0",
     "webpack-cli": "^2.1.2",

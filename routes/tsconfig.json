@@ -1,10 +1,10 @@
 {
-    "extends": "../tsconfig.json",
-    "compilerOptions": {
-        "module": "commonjs"
-    },
-    "include": [
-        "routes.config.js",
-        "../src/**/*.ts"
-    ]
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs"
+  },
+  "include": [
+    "routes.config.js",
+    "../src/**/*.ts"
+  ]
 }
