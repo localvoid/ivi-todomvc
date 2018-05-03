@@ -31,6 +31,7 @@ module.exports = {
     }),
   ],
   resolve: {
+    mainFields: ["module", "main"],
     extensions: [".ts", ".js"],
   },
 };

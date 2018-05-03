@@ -1,4 +1,4 @@
-import { Component, KeyCode, componentFactory, statelessComponentFactory, connect, map } from "ivi";
+import { Component, KeyCode, component, statelessComponent, connect, map } from "ivi";
 import * as Events from "ivi-events";
 import * as h from "ivi-html";
 import { QueryResult, Box, BoxSnapshot, createBoxSnapshot, lazy } from "ivi-state";
@@ -6,7 +6,7 @@ import {
   FilterType, TodoEntry, query, createEntry, removeCompleted, removeEntry, toggleEntryCompleted, editEntry, toggleAll,
 } from "./state";
 
-class Header extends Component {
+const Header = component(class extends Component {
   private inputValue = "";
 
   private inputEvents = [
@@ -33,9 +33,7 @@ class Header extends Component {
         .autofocus(true),
     );
   }
-}
-
-const header = componentFactory(Header);
+});
 
 function footerButton(selected: boolean, href: string, text: string) {
   return h.li().c(
@@ -49,7 +47,7 @@ interface FooterProps {
   completedCount: number;
 }
 
-class Footer extends Component<FooterProps> {
+const Footer = component(class extends Component<FooterProps> {
   private clearCompletedEvents = Events.onClick((ev) => {
     ev.preventDefault();
     removeCompleted();
@@ -79,11 +77,9 @@ class Footer extends Component<FooterProps> {
         null,
     );
   }
-}
+});
 
-const footer = componentFactory(Footer);
-
-const footerConnector = connect<
+const FooterConnector = connect<
   {
     filter: FilterType,
     entries: QueryResult<Box<TodoEntry>[]>,
@@ -113,10 +109,10 @@ const footerConnector = connect<
           },
         };
     },
-    ({ props }) => footer(props),
+    ({ props }) => Footer(props),
 );
 
-class EntryField extends Component<BoxSnapshot<TodoEntry>> {
+const EntryField = component(class extends Component<BoxSnapshot<TodoEntry>> {
   private editText = "";
   private editing = false;
 
@@ -183,20 +179,18 @@ class EntryField extends Component<BoxSnapshot<TodoEntry>> {
           null,
     );
   }
-}
+});
 
-const entryField = componentFactory(EntryField);
-
-const entryFieldConnector = connect<BoxSnapshot<TodoEntry>, Box<TodoEntry>>(
+const EntryFieldConnector = connect<BoxSnapshot<TodoEntry>, Box<TodoEntry>>(
   (prev, entry) => (
     (prev !== null && prev.value === entry.value) ?
       prev :
       createBoxSnapshot(entry)
   ),
-  (props) => entryField(props),
+  (props) => EntryField(props),
 );
 
-const entryListConnector = connect<
+const EntryListConnector = connect<
   {
     filter: FilterType,
     entries: QueryResult<Box<TodoEntry>[]>,
@@ -218,11 +212,11 @@ const entryListConnector = connect<
     },
     ({ entries }) => (
       h.ul().a({ "id": "todo-list" })
-        .c(map(entries.result, (e) => entryFieldConnector(e).k(e.value.id)))
+        .c(map(entries.result, (e) => EntryFieldConnector(e).k(e.value.id)))
     ),
 );
 
-class ToggleAllView extends Component<boolean> {
+const ToggleAllView = component(class extends Component<boolean> {
   private onChange = Events.onChange((ev) => {
     ev.preventDefault();
     toggleAll();
@@ -234,18 +228,17 @@ class ToggleAllView extends Component<boolean> {
       .e(this.onChange)
       .checked(this.props);
   }
-}
-const toggleAllView = componentFactory(ToggleAllView);
+});
 
-const toggleAllConnector = connect<boolean>(
+const ToggleAllConnector = connect<boolean>(
   (prev) => query().allEntries.get().result.length === query().completedEntries.get().result.length,
-  (checked) => toggleAllView(checked),
+  (checked) => ToggleAllView(checked),
 );
 
-const main = statelessComponentFactory(() => (
+const Main = statelessComponent(() => (
   h.section().a({ "id": "main" }).c(
-    toggleAllConnector(),
-    entryListConnector(),
+    ToggleAllConnector(),
+    EntryListConnector(),
   )
 ));
 
@@ -258,9 +251,9 @@ export const app = connect<{ entries: QueryResult<Box<TodoEntry>[]>, count: numb
   },
   ({ count }) => (
     h.section().c(
-      header(),
-      count ? main() : null,
-      count ? footerConnector() : null,
+      Header(),
+      count ? Main() : null,
+      count ? FooterConnector() : null,
     )
   ),
 );
