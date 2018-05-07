@@ -11,7 +11,7 @@ const Header = component(class extends Component {
 
   private inputEvents = [
     Events.onKeyDown((ev) => {
-      if (ev.keyCode === KeyCode.Enter) {
+      if (ev.native.keyCode === KeyCode.Enter) {
         createEntry(this.inputValue);
         this.inputValue = "";
         this.invalidate();
@@ -142,7 +142,7 @@ const EntryField = component(class extends Component<BoxSnapshot<TodoEntry>> {
       this.invalidate();
     }, true),
     Events.onKeyDown((ev) => {
-      switch (ev.keyCode) {
+      switch (ev.native.keyCode) {
         case (KeyCode.Enter):
           editEntry(this.props.box, this.editText);
           this.editText = "";
