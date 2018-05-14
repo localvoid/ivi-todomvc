@@ -1,14 +1,22 @@
+"use strict";
+
 const path = require("path");
 const webpack = require("webpack");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   mode: "development",
   entry: "./src/main.ts",
   output: {
     filename: "bundle.js",
+    publicPath: "/",
     path: path.resolve(__dirname, "dist"),
   },
+  resolve: {
+    extensions: [".js", ".ts", ".json"],
+  },
   module: {
+    strictExportPresence: true,
     rules: [
       {
         test: /\.js$/,
@@ -19,6 +27,7 @@ module.exports = {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: [
+          { loader: "cache-loader" },
           {
             loader: "ts-loader",
             options: {
@@ -34,16 +43,22 @@ module.exports = {
       "DEBUG": "true",
       "TARGET": JSON.stringify("browser"),
     }),
+    new HtmlWebpackPlugin({
+      inject: true,
+      template: "html/index.html",
+    }),
+    new webpack.NamedModulesPlugin(),
   ],
-  resolve: {
-    extensions: [".ts", ".js"],
+  performance: {
+    hints: false,
   },
-  devServer: {
-    port: 9000,
+  serve: {
+    hot: true,
+    port: 8080,
     host: "localhost",
-    historyApiFallback: true,
-    noInfo: false,
-    stats: "minimal",
-    contentBase: path.join(__dirname, "public"),
+    content: [
+      path.resolve(__dirname, "public"),
+    ],
+    open: true,
   },
 };

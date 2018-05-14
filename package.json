@@ -2,30 +2,26 @@
   "private": true,
   "name": "ivi-todomvc",
   "version": "1.0.0",
-  "description": "ivi TodoMVC",
-  "license": "MIT",
-  "author": {
-    "name": "Boris Kaul",
-    "email": "localvoid@gmail.com",
-    "url": "https://github.com/localvoid"
-  },
   "scripts": {
     "build:routes": "ts-node -P ./routes/tsconfig.json ./routes/routes.config.ts > ./src/routes.ts",
-    "serve": "webpack-dev-server",
-    "dist": "webpack --config webpack.config.prod.js"
+    "serve": "webpack-serve --config webpack.config.dev.js",
+    "dist": "webpack --config webpack.config.prod.js",
+    "lint": "tslint --format codeFrame"
   },
   "dependencies": {
-    "ivi": "^0.10.0",
-    "ivi-core": "^0.10.0",
-    "ivi-events": "^0.10.0",
-    "ivi-html": "^0.10.0",
-    "ivi-scheduler": "^0.10.0",
-    "ivi-state": "^0.10.0",
+    "ivi": "^0.11.0",
+    "ivi-core": "^0.11.0",
+    "ivi-events": "^0.11.0",
+    "ivi-html": "^0.11.0",
+    "ivi-scheduler": "^0.11.0",
+    "ivi-state": "^0.11.0",
     "routekit-resolver": "^0.4.1"
   },
   "devDependencies": {
     "@types/node": "^9.0.0",
-    "ivi-tslint-rules": "^0.1.3",
+    "cache-loader": "^1.2.2",
+    "html-webpack-plugin": "^3.2.0",
+    "ivi-tslint-rules": "^0.1.4",
     "routekit": "^0.4.1",
     "routekit-js": "^0.5.0",
     "source-map-loader": "^0.2.3",
@@ -34,9 +30,15 @@
     "tslib": "^1.9.0",
     "tslint": "^5.10.0",
     "typescript": "^2.8.3",
-    "webpack": "^4.7.0",
+    "webpack": "^4.8.3",
     "webpack-cli": "^2.1.3",
-    "webpack-dev-server": "^3.1.4",
-    "webpack-merge": "^4.1.2"
+    "webpack-serve": "^1.0.2"
+  },
+  "description": "ivi TodoMVC",
+  "license": "MIT",
+  "author": {
+    "name": "Boris Kaul",
+    "email": "localvoid@gmail.com",
+    "url": "https://github.com/localvoid"
   }
 }

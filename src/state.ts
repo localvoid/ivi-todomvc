@@ -35,7 +35,7 @@ export class AppStateQueries {
   );
 
   activeEntries = cachedQuery<Box<TodoEntry>[]>(
-    () => this.state.todos.sortedByDate.filter((entry) => !entry.value.isCompleted)
+    () => this.state.todos.sortedByDate.filter((entry) => !entry.value.isCompleted),
   );
 
   completedEntries = cachedQuery<Box<TodoEntry>[]>(
@@ -49,8 +49,8 @@ export class AppStateQueries {
   }
 }
 
-const state = new AppState();
-const queries = new AppStateQueries(state);
+const appState = new AppState();
+const queries = new AppStateQueries(appState);
 
 export function query(): AppStateQueries {
   return queries;
@@ -63,21 +63,23 @@ export function updateState(fn: () => void) {
 
 let _nextEntryId = 0;
 export function createEntry(text: string) {
-  updateState(() => {
-    const id = _nextEntryId++;
-    const entry = createBox(new TodoEntry(id, text, false));
-    state.todos.byId.set(id, entry);
-    state.todos.sortedByDate.push(entry);
+  if (text) {
+    updateState(() => {
+      const id = _nextEntryId++;
+      const entry = createBox(new TodoEntry(id, text, false));
+      appState.todos.byId.set(id, entry);
+      appState.todos.sortedByDate.push(entry);
 
-    queries.allEntries.reset();
-    queries.activeEntries.reset();
-  });
+      queries.allEntries.reset();
+      queries.activeEntries.reset();
+    });
+  }
 }
 
 export function removeEntry(entry: Box<TodoEntry>) {
   updateState(() => {
-    state.todos.sortedByDate.splice(state.todos.sortedByDate.indexOf(entry), 1)
-    state.todos.byId.delete(entry.value.id);
+    appState.todos.sortedByDate.splice(appState.todos.sortedByDate.indexOf(entry), 1);
+    appState.todos.byId.delete(entry.value.id);
 
     queries.allEntries.reset();
     if (entry.value.isCompleted) {
@@ -107,9 +109,9 @@ export function toggleEntryCompleted(entry: Box<TodoEntry>) {
 
 export function removeCompleted() {
   updateState(() => {
-    state.todos.sortedByDate = state.todos.sortedByDate.filter((entry) => {
+    appState.todos.sortedByDate = appState.todos.sortedByDate.filter((entry) => {
       if (entry.value.isCompleted) {
-        state.todos.byId.delete(entry.value.id);
+        appState.todos.byId.delete(entry.value.id);
         return false;
       }
       return true;
@@ -122,9 +124,9 @@ export function removeCompleted() {
 
 export function toggleAll() {
   updateState(() => {
-    const areSomeActive = state.todos.sortedByDate.some((entry) => !entry.value.isCompleted);
+    const areSomeActive = appState.todos.sortedByDate.some((entry) => !entry.value.isCompleted);
     let invalidateQueries = false;
-    for (const entry of state.todos.sortedByDate) {
+    for (const entry of appState.todos.sortedByDate) {
       if (entry.value.isCompleted !== areSomeActive) {
         const v = entry.value = entry.value.mutate();
         v.isCompleted = areSomeActive;
@@ -140,6 +142,6 @@ export function toggleAll() {
 
 export function setFilter(filter: FilterType) {
   updateState(() => {
-    state.filter = filter;
+    appState.filter = filter;
   });
 }

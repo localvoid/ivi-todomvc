@@ -1,6 +1,8 @@
 dist
+.TODO
 
 node_modules
+.cache-loader
 
 .DS_Store
 .idea

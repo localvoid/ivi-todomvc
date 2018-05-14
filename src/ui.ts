@@ -1,4 +1,4 @@
-import { Component, KeyCode, component, statelessComponent, connect, map } from "ivi";
+import { Component, KeyCode, statefulComponent, statelessComponent, connect, map, autofocus } from "ivi";
 import * as Events from "ivi-events";
 import * as h from "ivi-html";
 import { QueryResult, Box, BoxSnapshot, createBoxSnapshot, lazy } from "ivi-state";
@@ -6,7 +6,7 @@ import {
   FilterType, TodoEntry, query, createEntry, removeCompleted, removeEntry, toggleEntryCompleted, editEntry, toggleAll,
 } from "./state";
 
-const Header = component(class extends Component {
+const Header = statefulComponent(class extends Component {
   private inputValue = "";
 
   private inputEvents = [
@@ -14,23 +14,25 @@ const Header = component(class extends Component {
       if (ev.native.keyCode === KeyCode.Enter) {
         createEntry(this.inputValue);
         this.inputValue = "";
+
         this.invalidate();
       }
     }),
     Events.onInput((ev) => {
       this.inputValue = (ev.target as HTMLInputElement).value;
       this.invalidate();
-    })
+    }),
   ];
 
   render() {
     return h.header().c(
       h.h1().c("todos"),
-      h.input()
-        .a({ "id": "new-todo", "placeholder": "What needs to be done" })
-        .e(this.inputEvents)
-        .value(this.inputValue)
-        .autofocus(true),
+      autofocus(
+        h.input()
+          .a({ "id": "new-todo", "placeholder": "What needs to be done" })
+          .e(this.inputEvents)
+          .value(this.inputValue),
+      ),
     );
   }
 });
@@ -47,7 +49,7 @@ interface FooterProps {
   completedCount: number;
 }
 
-const Footer = component(class extends Component<FooterProps> {
+const Footer = statefulComponent(class extends Component<FooterProps> {
   private clearCompletedEvents = Events.onClick((ev) => {
     ev.preventDefault();
     removeCompleted();
@@ -112,7 +114,7 @@ const FooterConnector = connect<
     ({ props }) => Footer(props),
 );
 
-const EntryField = component(class extends Component<BoxSnapshot<TodoEntry>> {
+const EntryField = statefulComponent(class extends Component<BoxSnapshot<TodoEntry>> {
   private editText = "";
   private editing = false;
 
@@ -167,15 +169,16 @@ const EntryField = component(class extends Component<BoxSnapshot<TodoEntry>> {
       (isCompleted ? "editing completed" : "editing") :
       (isCompleted ? "completed" : undefined)).c(
         h.div("view").c(
-          h.inputCheckbox("toggle").e(this.toggleEvents).checked(isCompleted),
+          h.input("toggle").a({ "type": "checkbox" }).e(this.toggleEvents).value(isCompleted),
           h.label().e(this.labelEvents).c(entry.text),
           h.button("destroy").e(this.destroyEvents),
         ),
         editing ?
-          h.input("edit")
-            .e(this.editEvents())
-            .value(this.editText)
-            .autofocus(true) :
+          autofocus(
+            h.input("edit")
+              .e(this.editEvents())
+              .value(this.editText),
+          ) :
           null,
     );
   }
@@ -216,17 +219,17 @@ const EntryListConnector = connect<
     ),
 );
 
-const ToggleAllView = component(class extends Component<boolean> {
+const ToggleAllView = statefulComponent(class extends Component<boolean> {
   private onChange = Events.onChange((ev) => {
     ev.preventDefault();
     toggleAll();
   });
 
   render() {
-    return h.inputCheckbox()
-      .a({ "id": "toggle-all" })
+    return h.input()
+      .a({ "id": "toggle-all", "type": "checkbox" })
       .e(this.onChange)
-      .checked(this.props);
+      .value(this.props);
   }
 });
 
