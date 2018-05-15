@@ -14,7 +14,7 @@ export class TodoEntry {
     public readonly isCompleted: boolean,
   ) { }
 
-  mutate(): Mutable<TodoEntry> {
+  clone(): Mutable<TodoEntry> {
     return new TodoEntry(this.id, this.text, this.isCompleted);
   }
 }
@@ -92,14 +92,14 @@ export function removeEntry(entry: Box<TodoEntry>) {
 
 export function editEntry(entry: Box<TodoEntry>, text: string) {
   updateState(() => {
-    const v = entry.value = entry.value.mutate();
+    const v = entry.value = entry.value.clone();
     v.text = text;
   });
 }
 
 export function toggleEntryCompleted(entry: Box<TodoEntry>) {
   updateState(() => {
-    const v = entry.value = entry.value.mutate();
+    const v = entry.value = entry.value.clone();
     v.isCompleted = !v.isCompleted;
 
     queries.activeEntries.reset();
@@ -128,7 +128,7 @@ export function toggleAll() {
     let invalidateQueries = false;
     for (const entry of appState.todos.sortedByDate) {
       if (entry.value.isCompleted !== areSomeActive) {
-        const v = entry.value = entry.value.mutate();
+        const v = entry.value = entry.value.clone();
         v.isCompleted = areSomeActive;
         invalidateQueries = true;
       }

@@ -1,6 +1,6 @@
 import { Component, KeyCode, statefulComponent, statelessComponent, connect, map, autofocus } from "ivi";
-import * as Events from "ivi-events";
-import * as h from "ivi-html";
+import { onKeyDown, onInput, onClick, onChange, onDoubleClick, onBlur } from "ivi-events";
+import { header, h1, input, a, li, footer, ul, span, strong, button, div, label, section } from "ivi-html";
 import { QueryResult, Box, BoxSnapshot, createBoxSnapshot, lazy } from "ivi-state";
 import {
   FilterType, TodoEntry, query, createEntry, removeCompleted, removeEntry, toggleEntryCompleted, editEntry, toggleAll,
@@ -10,7 +10,7 @@ const Header = statefulComponent(class extends Component {
   private inputValue = "";
 
   private inputEvents = [
-    Events.onKeyDown((ev) => {
+    onKeyDown((ev) => {
       if (ev.native.keyCode === KeyCode.Enter) {
         createEntry(this.inputValue);
         this.inputValue = "";
@@ -18,17 +18,17 @@ const Header = statefulComponent(class extends Component {
         this.invalidate();
       }
     }),
-    Events.onInput((ev) => {
+    onInput((ev) => {
       this.inputValue = (ev.target as HTMLInputElement).value;
       this.invalidate();
     }),
   ];
 
   render() {
-    return h.header().c(
-      h.h1().c("todos"),
+    return header().c(
+      h1().c("todos"),
       autofocus(
-        h.input()
+        input()
           .a({ "id": "new-todo", "placeholder": "What needs to be done" })
           .e(this.inputEvents)
           .value(this.inputValue),
@@ -38,8 +38,8 @@ const Header = statefulComponent(class extends Component {
 });
 
 function footerButton(selected: boolean, href: string, text: string) {
-  return h.li().c(
-    h.a(selected ? "selected" : undefined).a({ "href": href }).c(text),
+  return li().c(
+    a(selected ? "selected" : undefined).a({ "href": href }).c(text),
   );
 }
 
@@ -50,7 +50,7 @@ interface FooterProps {
 }
 
 const Footer = statefulComponent(class extends Component<FooterProps> {
-  private clearCompletedEvents = Events.onClick((ev) => {
+  private clearCompletedEvents = onClick((ev) => {
     ev.preventDefault();
     removeCompleted();
   });
@@ -59,20 +59,20 @@ const Footer = statefulComponent(class extends Component<FooterProps> {
     const { filter, listedCount, completedCount } = this.props;
     const activeCount = listedCount - completedCount;
 
-    return h.footer().a({ id: "footer" }).c(
-      h.ul().a({ "id": "filters" }).c(
+    return footer().a({ id: "footer" }).c(
+      ul().a({ "id": "filters" }).c(
         footerButton(filter === FilterType.All, "#/", "All"),
         " ",
         footerButton(filter === FilterType.Active, "#/active", "Active"),
         " ",
         footerButton(filter === FilterType.Completed, "#/completed", "Completed"),
       ),
-      h.span().a({ "id": "todo-count" }).c(
-        h.strong().c(activeCount ? activeCount : "No"),
+      span().a({ "id": "todo-count" }).c(
+        strong().c(activeCount ? activeCount : "No"),
         (activeCount === 1) ? " item left" : " items left",
       ),
       (completedCount > 0) ?
-        h.button()
+        button()
           .a({ "id": "clear-completed" })
           .e(this.clearCompletedEvents)
           .c(`Clear completed (${completedCount})`) :
@@ -118,32 +118,32 @@ const EntryField = statefulComponent(class extends Component<BoxSnapshot<TodoEnt
   private editText = "";
   private editing = false;
 
-  private destroyEvents = Events.onClick((ev) => {
+  private destroyEvents = onClick((ev) => {
     removeEntry(this.props.box);
     ev.preventDefault();
   });
 
-  private toggleEvents = Events.onChange((ev) => {
+  private toggleEvents = onChange((ev) => {
     toggleEntryCompleted(this.props.box);
     ev.preventDefault();
   });
 
-  private labelEvents = Events.onDoubleClick((ev) => {
+  private labelEvents = onDoubleClick((ev) => {
     this.editText = this.props.value.text;
     this.editing = true;
     this.invalidate();
   });
 
   private editEvents = lazy(() => [
-    Events.onInput((ev) => {
+    onInput((ev) => {
       this.editText = (ev.target as HTMLInputElement).value;
     }),
-    Events.onBlur((ev) => {
+    onBlur((ev) => {
       this.editText = "";
       this.editing = false;
       this.invalidate();
     }, true),
-    Events.onKeyDown((ev) => {
+    onKeyDown((ev) => {
       switch (ev.native.keyCode) {
         case (KeyCode.Enter):
           editEntry(this.props.box, this.editText);
@@ -165,17 +165,17 @@ const EntryField = statefulComponent(class extends Component<BoxSnapshot<TodoEnt
     const entry = this.props.value;
     const isCompleted = entry.isCompleted;
 
-    return h.li(editing ?
+    return li(editing ?
       (isCompleted ? "editing completed" : "editing") :
       (isCompleted ? "completed" : undefined)).c(
-        h.div("view").c(
-          h.input("toggle").a({ "type": "checkbox" }).e(this.toggleEvents).value(isCompleted),
-          h.label().e(this.labelEvents).c(entry.text),
-          h.button("destroy").e(this.destroyEvents),
+        div("view").c(
+          input("toggle").a({ "type": "checkbox" }).e(this.toggleEvents).value(isCompleted),
+          label().e(this.labelEvents).c(entry.text),
+          button("destroy").e(this.destroyEvents),
         ),
         editing ?
           autofocus(
-            h.input("edit")
+            input("edit")
               .e(this.editEvents())
               .value(this.editText),
           ) :
@@ -214,19 +214,19 @@ const EntryListConnector = connect<
         { filter, entries };
     },
     ({ entries }) => (
-      h.ul().a({ "id": "todo-list" })
+      ul().a({ "id": "todo-list" })
         .c(map(entries.result, (e) => EntryFieldConnector(e).k(e.value.id)))
     ),
 );
 
 const ToggleAllView = statefulComponent(class extends Component<boolean> {
-  private onChange = Events.onChange((ev) => {
+  private onChange = onChange((ev) => {
     ev.preventDefault();
     toggleAll();
   });
 
   render() {
-    return h.input()
+    return input()
       .a({ "id": "toggle-all", "type": "checkbox" })
       .e(this.onChange)
       .value(this.props);
@@ -239,7 +239,7 @@ const ToggleAllConnector = connect<boolean>(
 );
 
 const Main = statelessComponent(() => (
-  h.section().a({ "id": "main" }).c(
+  section().a({ "id": "main" }).c(
     ToggleAllConnector(),
     EntryListConnector(),
   )
@@ -253,7 +253,7 @@ export const app = connect<{ entries: QueryResult<Box<TodoEntry>[]>, count: numb
       { entries, count: entries.result.length };
   },
   ({ count }) => (
-    h.section().c(
+    section().c(
       Header(),
       count ? Main() : null,
       count ? FooterConnector() : null,
