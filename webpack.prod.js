@@ -1,18 +1,13 @@
 "use strict";
 
-const path = require("path");
 const webpack = require("webpack");
+const merge = require("webpack-merge");
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
-module.exports = {
+module.exports = merge(require("./webpack.common"), {
   mode: "production",
-  entry: "./src/main.ts",
-  output: {
-    filename: "bundle.js",
-    publicPath: "/",
-    path: path.resolve(__dirname, "dist"),
-  },
   devtool: "hidden-source-map",
   optimization: {
     minimizer: [
@@ -29,42 +24,16 @@ module.exports = {
             inline: true,
             passes: 3,
           },
-          toplevel: true,
-          mangle: {
-            safari10: true,
-          },
           output: {
             ecma: 5,
             comments: false,
           },
+          toplevel: true,
+          mangle: {
+            safari10: true,
+          },
         },
       }),
-    ],
-  },
-  resolve: {
-    extensions: [".js", ".ts", ".json"],
-  },
-  module: {
-    strictExportPresence: true,
-    rules: [
-      {
-        test: /\.js$/,
-        use: ["source-map-loader"],
-        enforce: "pre"
-      },
-      {
-        test: /\.ts$/,
-        exclude: /node_modules/,
-        use: [
-          { loader: "cache-loader" },
-          {
-            loader: "ts-loader",
-            options: {
-              configFile: "tsconfig.json",
-            },
-          },
-        ],
-      },
     ],
   },
   plugins: [
@@ -72,6 +41,9 @@ module.exports = {
       "DEBUG": "false",
       "TARGET": JSON.stringify("browser"),
     }),
+    new CopyWebpackPlugin([
+      { from: "assets/", to: "" },
+    ]),
     new HtmlWebpackPlugin({
       inject: true,
       template: "html/index.html",
@@ -89,4 +61,4 @@ module.exports = {
       },
     }),
   ],
-};
+});

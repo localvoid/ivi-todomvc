@@ -5,7 +5,6 @@ const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-  mode: "development",
   entry: "./src/main.ts",
   output: {
     filename: "bundle.js",
@@ -27,7 +26,12 @@ module.exports = {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: [
-          { loader: "cache-loader" },
+          {
+            loader: "cache-loader",
+            options: {
+              cacheDirectory: path.resolve(__dirname, "node_modules", ".cache", "cache-loader"),
+            },
+          },
           {
             loader: "ts-loader",
             options: {
@@ -37,28 +41,5 @@ module.exports = {
         ],
       },
     ],
-  },
-  plugins: [
-    new webpack.DefinePlugin({
-      "DEBUG": "true",
-      "TARGET": JSON.stringify("browser"),
-    }),
-    new HtmlWebpackPlugin({
-      inject: true,
-      template: "html/index.html",
-    }),
-    new webpack.NamedModulesPlugin(),
-  ],
-  performance: {
-    hints: false,
-  },
-  serve: {
-    hot: true,
-    port: 8080,
-    host: "localhost",
-    content: [
-      path.resolve(__dirname, "public"),
-    ],
-    open: true,
   },
 };
