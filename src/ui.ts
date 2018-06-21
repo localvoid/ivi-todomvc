@@ -1,7 +1,8 @@
 import {
-  Component, KeyCode, statefulComponent, statelessComponent, connect, map, autofocus,
+  Component, KeyCode, statefulComponent, statelessComponent, connect, map,
   onKeyDown, onInput, onClick, onChange, onDoubleClick, onBlur, EventFlags,
 } from "ivi";
+import { AUTOFOCUS } from "ivi-scheduler";
 import {
   header, h1, input, a, li, footer, ul, span, strong, button, div, label, section, VALUE, CHECKED,
 } from "ivi-html";
@@ -31,13 +32,12 @@ const Header = statefulComponent(class extends Component {
   render() {
     return header().c(
       h1().c("todos"),
-      autofocus(
-        input("", {
-          id: "new-todo",
-          placeholder: "What needs to be done",
-          value: VALUE(this.inputValue),
-        }).e(this.inputEvents),
-      ),
+      input("", {
+        id: "new-todo",
+        placeholder: "What needs to be done",
+        value: VALUE(this.inputValue),
+        autofocus: AUTOFOCUS(true),
+      }).e(this.inputEvents),
     );
   }
 });
@@ -168,10 +168,10 @@ const EntryField = statefulComponent(class extends Component<BoxSnapshot<TodoEnt
           button("destroy").e(this.destroyEvents),
         ),
         When(editing,
-          autofocus(
-            input("edit", { value: VALUE(this.editText) })
-              .e(this.editEvents()),
-          ),
+          input("edit", {
+            value: VALUE(this.editText),
+            autofocus: AUTOFOCUS(true),
+          }).e(this.editEvents()),
         ),
     );
   }

@@ -1,5 +1,5 @@
+import { invalidate } from "ivi";
 import { Mutable, Box, createBox, cachedQuery } from "ivi-state";
-import { updateNextFrame } from "ivi";
 
 export const enum FilterType {
   All,
@@ -58,7 +58,7 @@ export function query(): AppStateQueries {
 
 export function updateState(fn: () => void) {
   fn();
-  updateNextFrame();
+  invalidate();
 }
 
 let _nextEntryId = 0;
