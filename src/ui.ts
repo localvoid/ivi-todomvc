@@ -80,6 +80,7 @@ const Footer = component((c) => {
 
 const EntryField = component<Entry>((c) => {
   let _entry: Entry;
+  let _isCompleted: boolean;
   let _editText = "";
   let _editing = false;
 
@@ -123,71 +124,64 @@ const EntryField = component<Entry>((c) => {
     }),
   ]);
 
-  return (entry) => {
-    _entry = entry;
-    const text = getText(entry);
-    const isCompleted = getIsCompleted(entry);
+  return (entry) => (
+    _entry = entry,
+    _isCompleted = getIsCompleted(entry),
 
-    return li(_editing ?
-      (isCompleted ? "editing completed" : "editing") :
-      (isCompleted ? "completed" : "")).c(
+    li(_editing ?
+      (_isCompleted ? "editing completed" : "editing") :
+      (_isCompleted ? "completed" : "")).c(
         div("view").c(
-          input("toggle", { type: "checkbox", checked: CHECKED(isCompleted) }).e(toggleEvents),
-          label().e(labelEvents).t(text),
+          input("toggle", { type: "checkbox", checked: CHECKED(_isCompleted) }).e(toggleEvents),
+          label().e(labelEvents).t(getText(entry)),
           button("destroy").e(destroyEvents),
         ),
         When(_editing,
           input("edit", { value: VALUE(_editText), autofocus: AUTOFOCUS(true) }).e(editEvents()),
         ),
-      );
-  };
+      )
+  );
 });
 
 const EntryList = component((c) => {
   const getFilter = useFilter(c);
   const getEntriesByFilterType = useEntriesByFilterType(c);
 
-  return () => {
-    const filter = getFilter();
-    const entries = getEntriesByFilterType(filter);
-
-    return ul("", { id: "todo-list" }).c(map(entries, (e) => EntryField(e).k(e.id)));
-  };
+  return () => ul("", { id: "todo-list" }).c(
+    map(getEntriesByFilterType(getFilter()), (e) => EntryField(e).k(e.id)),
+  );
 });
 
 const ToggleAllView = component((c) => {
   const getEntries = useEntries(c);
-  const getCompletedEntries = useEntries(c);
+  const getCompletedEntries = useCompletedEntries(c);
   const inputEvents = onChange(() => (
     update((s) => { toggleAll(s); }),
     EventFlags.PreventDefault
   ));
 
-  return () => {
-    const entries = getEntries();
-    const completedEntries = getCompletedEntries();
-
-    return input("", {
+  return () => input("",
+    {
       id: "toggle-all",
       type: "checkbox",
-      checked: CHECKED(entries.length !== completedEntries.length),
-    }).e(inputEvents);
-  };
+      checked: CHECKED(getEntries().length !== getCompletedEntries().length),
+    },
+  ).e(inputEvents);
 });
 
 const Main = statelessComponent(() => section("", { id: "main" }).c(ToggleAllView(), EntryList()));
 
 export const App = component((c) => {
+  let _count: number;
   const getEntries = useEntries(c);
 
-  return () => {
-    const entries = getEntries();
-    const count = entries.length;
+  return () => (
+    _count = getEntries().length,
 
-    return section().c(
+    section().c(
       Header(),
-      count ? Main() : null,
-      count ? Footer() : null,
-    );
-  };
+      _count ? Main() : null,
+      _count ? Footer() : null,
+    )
+  );
 });
