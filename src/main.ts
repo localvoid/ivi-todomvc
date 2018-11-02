@@ -1,9 +1,9 @@
 import { setupScheduler, render } from "ivi";
-import { invalidateHandler } from "ivi-scheduler";
+import { updateHandler } from "ivi-scheduler";
 import { RouteMap, ResolveResult, resolve } from "routekit-resolver";
 import { ROUTES } from "./routes";
-import { app } from "./ui";
-import { setFilter } from "./state";
+import { App } from "./ui";
+import { STATE, appStateContext, update, setFilter } from "./state";
 
 function initRouter<A, T>(
   extractPath: (location: Location) => string,
@@ -25,7 +25,7 @@ function initRouter<A, T>(
   });
 }
 
-setupScheduler(invalidateHandler);
+setupScheduler(updateHandler);
 
 initRouter<number, number>(
   (location) => {
@@ -37,9 +37,9 @@ initRouter<number, number>(
   (a, b) => b,
   (result) => {
     if (result) {
-      setFilter(result.data!);
+      update((s) => { setFilter(s, result.data!); });
     }
   },
 );
 
-render(app(), document.getElementById("todoapp")!);
+render(appStateContext(STATE, App()), document.getElementById("todoapp")!);

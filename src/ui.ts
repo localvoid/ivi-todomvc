@@ -1,257 +1,193 @@
 import {
-  Component, KeyCode, statefulComponent, statelessComponent, connect, map,
-  onKeyDown, onInput, onClick, onChange, onDoubleClick, onBlur, EventFlags,
+  component, invalidate, KeyCode, statelessComponent, map,
+  onKeyDown, onInput, onClick, onChange, onDoubleClick, onBlur, EventFlags, InvalidateFlags,
 } from "ivi";
 import { AUTOFOCUS } from "ivi-scheduler";
 import {
   header, h1, input, a, li, footer, ul, span, strong, button, div, label, section, VALUE, CHECKED,
 } from "ivi-html";
-import { QueryResult, Box, BoxSnapshot, createBoxSnapshot, lazy } from "ivi-state";
+import { lazy } from "ivi-state";
 import {
-  FilterType, TodoEntry, query, createEntry, removeCompleted, removeEntry, toggleEntryCompleted, editEntry, toggleAll,
+  FilterType, update, addEntry, removeCompleted, removeEntry, toggleCompleted, editEntry, toggleAll, useFilter,
+  useEntries, useCompletedEntries, Entry, useEntryIsCompleted, useEntryText, useEntriesByFilterType,
 } from "./state";
 
-const Header = statefulComponent(class extends Component {
-  private inputValue = "";
+const When = <T>(condition: boolean, result: T) => (condition === true) ? result : null;
 
-  private inputEvents = [
+const Header = component((c) => {
+  let _inputValue = "";
+
+  const inputEvents = [
     onKeyDown((ev) => {
       if (ev.native.keyCode === KeyCode.Enter) {
-        createEntry(this.inputValue);
-        this.inputValue = "";
-
-        this.invalidate();
+        const v = _inputValue;
+        _inputValue = "";
+        update((s) => { addEntry(s, v); });
+        invalidate(c, InvalidateFlags.RequestSyncUpdate);
       }
     }),
     onInput((ev) => {
-      this.inputValue = (ev.target as HTMLInputElement).value;
-      this.invalidate();
+      _inputValue = (ev.target as HTMLInputElement).value;
+      invalidate(c, InvalidateFlags.RequestSyncUpdate);
     }),
   ];
 
-  render() {
-    return header().c(
-      h1().c("todos"),
+  return () => (
+    header().c(
+      h1().t("todos"),
       input("", {
         id: "new-todo",
         placeholder: "What needs to be done",
-        value: VALUE(this.inputValue),
+        value: VALUE(_inputValue),
         autofocus: AUTOFOCUS(true),
-      }).e(this.inputEvents),
-    );
-  }
+      }).e(inputEvents),
+    )
+  );
 });
 
-function footerButton(selected: boolean, href: string, text: string) {
-  return li().c(
-    a(selected ? "selected" : "", { href }).c(text),
-  );
-}
+const FooterButton = (selected: boolean, href: string, text: string) => (
+  li().c(a(selected ? "selected" : "", { href }).t(text))
+);
 
-interface FooterProps {
-  filter: FilterType;
-  listedCount: number;
-  completedCount: number;
-}
+const Footer = component((c) => {
+  const getFilter = useFilter(c);
+  const getEntries = useEntries(c);
+  const getCompletedEntries = useCompletedEntries(c);
 
-const Footer = statefulComponent(class extends Component<FooterProps> {
-  private clearCompletedEvents = onClick((ev) => (removeCompleted(), EventFlags.PreventDefault));
+  const clearEvents = onClick(() => (update((s) => { removeCompleted(s); }), EventFlags.PreventDefault));
 
-  render() {
-    const { filter, listedCount, completedCount } = this.props;
+  return () => {
+    const filter = getFilter();
+    const listedCount = getEntries().length;
+    const completedCount = getCompletedEntries().length;
     const activeCount = listedCount - completedCount;
 
     return footer("", { id: "footer" }).c(
       ul("", { id: "filters" }).c(
-        footerButton(filter === FilterType.All, "#/", "All"),
-        " ",
-        footerButton(filter === FilterType.Active, "#/active", "Active"),
-        " ",
-        footerButton(filter === FilterType.Completed, "#/completed", "Completed"),
+        FooterButton(filter === FilterType.All, "#/", "All"), " ",
+        FooterButton(filter === FilterType.Active, "#/active", "Active"), " ",
+        FooterButton(filter === FilterType.Completed, "#/completed", "Completed"),
       ),
       span("", { id: "todo-count" }).c(
-        strong().c(activeCount > 0 ? activeCount : "No"),
-        activeCount === 1 ? " item left" : " items left",
+        strong().t(activeCount > 0 ? activeCount : "No"), activeCount === 1 ? " item left" : " items left",
       ),
       When((completedCount > 0),
-        button("", { id: "clear-completed" })
-          .e(this.clearCompletedEvents)
-          .c(`Clear completed (${completedCount})`),
+        button("", { id: "clear-completed" }).e(clearEvents).t(`Clear completed (${completedCount})`),
       ),
     );
-  }
+  };
 });
 
-const FooterConnector = connect<
-  {
-    filter: FilterType,
-    entries: QueryResult<Box<TodoEntry>[]>,
-    completedEntries: QueryResult<Box<TodoEntry>[]>,
-    props: FooterProps,
-  }
-  >(
-    (prev) => {
-      const filter = query().filter();
-      const entries = query().allEntries.get();
-      const completedEntries = query().completedEntries.get();
+const EntryField = component<Entry>((c) => {
+  let _entry: Entry;
+  let _editText = "";
+  let _editing = false;
 
-      return (
-        prev !== null &&
-        prev.filter === filter &&
-        prev.entries === entries &&
-        prev.completedEntries === completedEntries
-      ) ? prev :
-        {
-          filter,
-          entries,
-          completedEntries,
-          props: {
-            filter,
-            listedCount: entries.result.length,
-            completedCount: completedEntries.result.length,
-          },
-        };
-    },
-    ({ props }) => Footer(props),
-);
+  const getText = useEntryText(c);
+  const getIsCompleted = useEntryIsCompleted(c);
 
-const EntryField = statefulComponent(class extends Component<BoxSnapshot<TodoEntry>> {
-  private editText = "";
-  private editing = false;
+  const destroyEvents = onClick(() => (update((s) => { removeEntry(s, _entry); }), EventFlags.PreventDefault));
+  const toggleEvents = onChange(() => (update((s) => { toggleCompleted(s, _entry); }), EventFlags.PreventDefault));
 
-  private destroyEvents = onClick((ev) => (removeEntry(this.props.box), EventFlags.PreventDefault));
-  private toggleEvents = onChange((ev) => (toggleEntryCompleted(this.props.box), EventFlags.PreventDefault));
-
-  private labelEvents = onDoubleClick((ev) => {
-    this.editText = this.props.value.text;
-    this.editing = true;
-    this.invalidate();
+  const labelEvents = onDoubleClick((ev) => {
+    _editText = _entry.text;
+    _editing = true;
+    invalidate(c);
   });
 
-  private editEvents = lazy(() => [
+  const editEvents = lazy(() => [
     onInput((ev) => {
-      this.editText = (ev.target as HTMLInputElement).value;
+      _editText = (ev.target as HTMLInputElement).value;
     }),
     onBlur((ev) => {
-      this.editText = "";
-      this.editing = false;
-      this.invalidate();
+      _editText = "";
+      _editing = false;
+      invalidate(c);
     }, true),
     onKeyDown((ev) => {
       switch (ev.native.keyCode) {
-        case (KeyCode.Enter):
-          editEntry(this.props.box, this.editText);
-          this.editText = "";
-          this.editing = false;
-          this.invalidate();
+        case (KeyCode.Enter): {
+          const v = _editText;
+          _editText = "";
+          _editing = false;
+          update((s) => { editEntry(s, _entry, v); });
+          invalidate(c);
           break;
+        }
         case (KeyCode.Escape):
-          this.editText = "";
-          this.editing = false;
-          this.invalidate();
+          _editText = "";
+          _editing = false;
+          invalidate(c);
           break;
       }
     }),
   ]);
 
-  render() {
-    const editing = this.editing;
-    const entry = this.props.value;
-    const isCompleted = entry.isCompleted;
+  return (entry) => {
+    _entry = entry;
+    const text = getText(entry);
+    const isCompleted = getIsCompleted(entry);
 
-    return li(editing ?
+    return li(_editing ?
       (isCompleted ? "editing completed" : "editing") :
       (isCompleted ? "completed" : "")).c(
         div("view").c(
-          input("toggle", { type: "checkbox", checked: CHECKED(isCompleted) }).e(this.toggleEvents),
-          label().e(this.labelEvents).c(entry.text),
-          button("destroy").e(this.destroyEvents),
+          input("toggle", { type: "checkbox", checked: CHECKED(isCompleted) }).e(toggleEvents),
+          label().e(labelEvents).t(text),
+          button("destroy").e(destroyEvents),
         ),
-        When(editing,
-          input("edit", {
-            value: VALUE(this.editText),
-            autofocus: AUTOFOCUS(true),
-          }).e(this.editEvents()),
+        When(_editing,
+          input("edit", { value: VALUE(_editText), autofocus: AUTOFOCUS(true) }).e(editEvents()),
         ),
-    );
-  }
+      );
+  };
 });
 
-const EntryFieldConnector = connect<BoxSnapshot<TodoEntry>, Box<TodoEntry>>(
-  (prev, entry) => (
-    (prev !== null && prev.value === entry.value) ?
-      prev :
-      createBoxSnapshot(entry)
-  ),
-  EntryField,
-);
+const EntryList = component((c) => {
+  const getFilter = useFilter(c);
+  const getEntriesByFilterType = useEntriesByFilterType(c);
 
-const EntryListConnector = connect<
-  {
-    filter: FilterType,
-    entries: QueryResult<Box<TodoEntry>[]>,
-  }
-  >(
-    (prev) => {
-      const filter = query().filter();
-      let entries: QueryResult<Box<TodoEntry>[]>;
-      if (filter === FilterType.All) {
-        entries = query().allEntries.get();
-      } else if (filter === FilterType.Active) {
-        entries = query().activeEntries.get();
-      } else {
-        entries = query().completedEntries.get();
-      }
+  return () => {
+    const filter = getFilter();
+    const entries = getEntriesByFilterType(filter);
 
-      return (prev !== null && prev.entries === entries) ? prev :
-        { filter, entries };
-    },
-    ({ entries }) => (
-      ul("", { id: "todo-list" })
-        .c(map(entries.result, (e) => EntryFieldConnector(e).k(e.value.id)))
-    ),
-);
+    return ul("", { id: "todo-list" }).c(map(entries, (e) => EntryField(e).k(e.id)));
+  };
+});
 
-const ToggleAllView = statefulComponent(class extends Component<boolean> {
-  private onChange = onChange((ev) => (toggleAll(), EventFlags.PreventDefault));
+const ToggleAllView = component((c) => {
+  const getEntries = useEntries(c);
+  const getCompletedEntries = useEntries(c);
+  const inputEvents = onChange(() => (
+    update((s) => { toggleAll(s); }),
+    EventFlags.PreventDefault
+  ));
 
-  render() {
+  return () => {
+    const entries = getEntries();
+    const completedEntries = getCompletedEntries();
+
     return input("", {
       id: "toggle-all",
       type: "checkbox",
-      checked: CHECKED(this.props),
-    }).e(this.onChange);
-  }
+      checked: CHECKED(entries.length !== completedEntries.length),
+    }).e(inputEvents);
+  };
 });
 
-const ToggleAllConnector = connect<boolean>(
-  (prev) => (query().allEntries.get().result.length === query().completedEntries.get().result.length),
-  (checked) => ToggleAllView(checked),
-);
+const Main = statelessComponent(() => section("", { id: "main" }).c(ToggleAllView(), EntryList()));
 
-const Main = statelessComponent(() => (
-  section("", { id: "main" }).c(
-    ToggleAllConnector(),
-    EntryListConnector(),
-  )
-));
+export const App = component((c) => {
+  const getEntries = useEntries(c);
 
-function When<T>(condition: boolean, result: T): T | null {
-  return (condition === true) ? result : null;
-}
+  return () => {
+    const entries = getEntries();
+    const count = entries.length;
 
-export const app = connect<{ entries: QueryResult<Box<TodoEntry>[]>, count: number }>(
-  (prev) => {
-    const entries = query().allEntries.get();
-
-    return (prev !== null && prev.entries === entries) ? prev :
-      { entries, count: entries.result.length };
-  },
-  ({ count }) => (
-    section().c(
+    return section().c(
       Header(),
       count ? Main() : null,
-      count ? FooterConnector() : null,
-    )
-  ),
-);
+      count ? Footer() : null,
+    );
+  };
+});
