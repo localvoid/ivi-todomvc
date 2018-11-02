@@ -164,7 +164,7 @@ const ToggleAllView = component((c) => {
     {
       id: "toggle-all",
       type: "checkbox",
-      checked: CHECKED(getEntries().length !== getCompletedEntries().length),
+      checked: CHECKED(getEntries().length === getCompletedEntries().length),
     },
   ).e(inputEvents);
 });

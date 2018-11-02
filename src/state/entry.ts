@@ -1,14 +1,8 @@
-import { Component, useSelect } from "ivi";
+import { createSelector } from "./selector";
 
 export type Entry = ReturnType<typeof createEntry>;
 
 let nextId = 0;
-export function createEntry(text: string) {
-  return { id: nextId++, text, isCompleted: false };
-}
-
-const getText = (entry: Entry) => entry.text;
-const isCompleted = (entry: Entry) => entry.isCompleted;
-
-export const useEntryText = (c: Component) => useSelect(c, getText);
-export const useEntryIsCompleted = (c: Component) => useSelect(c, isCompleted);
+export const createEntry = (text: string) => ({ id: nextId++, text, isCompleted: false });
+export const useEntryText = createSelector((entry: Entry) => entry.text);
+export const useEntryIsCompleted = createSelector((entry: Entry) => entry.isCompleted);

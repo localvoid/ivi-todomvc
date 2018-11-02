@@ -1,5 +1,6 @@
-import { Component, VNode, context, useSelect } from "ivi";
+import { VNode, context } from "ivi";
 import { cachedQuery } from "./query";
+import { createSelector } from "./selector";
 import { Entry, createEntry } from "./entry";
 
 export const enum FilterType { All, Completed, Active }
@@ -23,11 +24,11 @@ export function createAppState() {
   return { filter: FilterType.All, entriesById, entries, activeEntries, completedEntries };
 }
 
-const getFilter = (_: void, ctx: Context) => getAppState(ctx).filter;
-const getEntries = (_: void, ctx: Context) => getAppState(ctx).entries.get();
-const getCompletedEntries = (_: void, ctx: Context) => getAppState(ctx).completedEntries.get();
-const getActiveEntries = (_: void, ctx: Context) => getAppState(ctx).activeEntries.get();
-function getEntriesByFilterType(filter: FilterType, ctx: Context) {
+export const useFilter = createSelector((_: void, ctx: Context) => getAppState(ctx).filter);
+export const useEntries = createSelector((_: void, ctx: Context) => getAppState(ctx).entries.get());
+export const useCompletedEntries = createSelector((_: void, ctx: Context) => getAppState(ctx).completedEntries.get());
+export const useActiveEntries = createSelector((_: void, ctx: Context) => getAppState(ctx).activeEntries.get());
+export const useEntriesByFilterType = createSelector((filter: FilterType, ctx: Context) => {
   const s = getAppState(ctx);
   if (filter === FilterType.All) {
     return s.entries.get();
@@ -36,13 +37,7 @@ function getEntriesByFilterType(filter: FilterType, ctx: Context) {
     return s.completedEntries.get();
   }
   return s.activeEntries.get();
-}
-
-export const useFilter = (c: Component) => useSelect(c, getFilter);
-export const useEntries = (c: Component) => useSelect(c, getEntries);
-export const useCompletedEntries = (c: Component) => useSelect(c, getCompletedEntries);
-export const useActiveEntries = (c: Component) => useSelect(c, getActiveEntries);
-export const useEntriesByFilterType = (c: Component) => useSelect(c, getEntriesByFilterType);
+});
 
 function resetCompletedQueries(s: AppState) {
   s.activeEntries.reset();
