@@ -9,10 +9,10 @@
     "lint": "tslint --format codeFrame"
   },
   "dependencies": {
-    "ivi": "^0.17.0",
-    "ivi-html": "^0.17.0",
-    "ivi-scheduler": "^0.17.0",
-    "ivi-state": "^0.17.0",
+    "ivi": "^0.17.0-alpha.0",
+    "ivi-html": "^0.17.0-alpha.0",
+    "ivi-scheduler": "^0.17.0-alpha.0",
+    "ivi-state": "^0.17.0-alpha.0",
     "routekit-resolver": "^0.4.1"
   },
   "devDependencies": {

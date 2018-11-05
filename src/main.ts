@@ -1,5 +1,5 @@
 import { setupScheduler, render } from "ivi";
-import { updateHandler } from "ivi-scheduler";
+import { SCHEDULER } from "ivi-scheduler";
 import { RouteMap, ResolveResult, resolve } from "routekit-resolver";
 import { ROUTES } from "./routes";
 import { App } from "./ui";
@@ -25,7 +25,7 @@ function initRouter<A, T>(
   });
 }
 
-setupScheduler(updateHandler);
+setupScheduler(SCHEDULER);
 
 initRouter<number, number>(
   (location) => {

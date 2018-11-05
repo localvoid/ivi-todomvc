@@ -1,7 +1,6 @@
-import { VNode, context } from "ivi";
+import { VNode, context, selector } from "ivi";
 import { cachedQuery } from "./query";
-import { createSelector } from "./selector";
-import { Entry, createEntry } from "./entry";
+import { Entry, createEntry, entrySetText, entryToggleCompleted } from "./entry";
 
 export const enum FilterType { All, Completed, Active }
 
@@ -24,11 +23,11 @@ export function createAppState() {
   return { filter: FilterType.All, entriesById, entries, activeEntries, completedEntries };
 }
 
-export const useFilter = createSelector((_: void, ctx: Context) => getAppState(ctx).filter);
-export const useEntries = createSelector((_: void, ctx: Context) => getAppState(ctx).entries.get());
-export const useCompletedEntries = createSelector((_: void, ctx: Context) => getAppState(ctx).completedEntries.get());
-export const useActiveEntries = createSelector((_: void, ctx: Context) => getAppState(ctx).activeEntries.get());
-export const useEntriesByFilterType = createSelector((filter: FilterType, ctx: Context) => {
+export const useFilter = selector((_: void, ctx: Context) => getAppState(ctx).filter);
+export const useEntries = selector((_: void, ctx: Context) => getAppState(ctx).entries.get());
+export const useCompletedEntries = selector((_: void, ctx: Context) => getAppState(ctx).completedEntries.get());
+export const useActiveEntries = selector((_: void, ctx: Context) => getAppState(ctx).activeEntries.get());
+export const useEntriesByFilterType = selector((filter: FilterType, ctx: Context) => {
   const s = getAppState(ctx);
   if (filter === FilterType.All) {
     return s.entries.get();
@@ -61,11 +60,11 @@ export function removeEntry(s: AppState, entry: Entry) {
 }
 
 export function editEntry(s: AppState, entry: Entry, text: string) {
-  entry.text = text;
+  entrySetText(entry, text);
 }
 
 export function toggleCompleted(s: AppState, entry: Entry) {
-  entry.isCompleted = !entry.isCompleted;
+  entryToggleCompleted(entry);
   resetCompletedQueries(s);
 }
 
@@ -84,9 +83,8 @@ export function toggleAll(s: AppState) {
   const areSomeActive = entries.some((e) => !e.isCompleted);
   let invalidateQueries = false;
   entries.forEach((e) => {
-    const c = e.isCompleted;
-    if (c !== areSomeActive) {
-      e.isCompleted = !c;
+    if (e.isCompleted !== areSomeActive) {
+      entryToggleCompleted(e);
       invalidateQueries = true;
     }
   });

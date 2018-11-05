@@ -22,6 +22,7 @@ module.exports = merge(require("./webpack.common"), {
           compress: {
             ecma: 5,
             inline: true,
+            reduce_funcs: false,
             passes: 3,
           },
           output: {

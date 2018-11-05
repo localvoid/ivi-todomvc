@@ -9,7 +9,7 @@ import {
 import { lazy } from "ivi-state";
 import {
   FilterType, update, addEntry, removeCompleted, removeEntry, toggleCompleted, editEntry, toggleAll, useFilter,
-  useEntries, useCompletedEntries, Entry, useEntryIsCompleted, useEntryText, useEntriesByFilterType,
+  useEntries, useCompletedEntries, Entry, useEntry, useEntriesByFilterType,
 } from "./state";
 
 const When = <T>(condition: boolean, result: T) => (condition === true) ? result : null;
@@ -80,13 +80,10 @@ const Footer = component((c) => {
 
 const EntryField = component<Entry>((c) => {
   let _entry: Entry;
-  let _isCompleted: boolean;
   let _editText = "";
   let _editing = false;
 
-  const getText = useEntryText(c);
-  const getIsCompleted = useEntryIsCompleted(c);
-
+  const dirtyCheckEntry = useEntry(c);
   const destroyEvents = onClick(() => (update((s) => { removeEntry(s, _entry); }), EventFlags.PreventDefault));
   const toggleEvents = onChange(() => (update((s) => { toggleCompleted(s, _entry); }), EventFlags.PreventDefault));
 
@@ -125,15 +122,15 @@ const EntryField = component<Entry>((c) => {
   ]);
 
   return (entry) => (
+    dirtyCheckEntry(entry),
     _entry = entry,
-    _isCompleted = getIsCompleted(entry),
 
     li(_editing ?
-      (_isCompleted ? "editing completed" : "editing") :
-      (_isCompleted ? "completed" : "")).c(
+      (entry.isCompleted ? "editing completed" : "editing") :
+      (entry.isCompleted ? "completed" : "")).c(
         div("view").c(
-          input("toggle", { type: "checkbox", checked: CHECKED(_isCompleted) }).e(toggleEvents),
-          label().e(labelEvents).t(getText(entry)),
+          input("toggle", { type: "checkbox", checked: CHECKED(entry.isCompleted) }).e(toggleEvents),
+          label().e(labelEvents).t(entry.text),
           button("destroy").e(destroyEvents),
         ),
         When(_editing,
