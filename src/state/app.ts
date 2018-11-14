@@ -1,98 +1,81 @@
-import { VNode, context, selector } from "ivi";
-import { cachedQuery } from "./query";
+import { selector, dirty } from "ivi";
+import { cachedQuery } from "ivi-state";
+import { RouteLocation } from "./location";
 import { Entry, createEntry, entrySetText, entryToggleCompleted } from "./entry";
 
-export const enum FilterType { All, Completed, Active }
+const entriesById = new Map<Number, Entry>();
+const entries = cachedQuery(() => Array.from(entriesById.values()));
+const activeEntries = cachedQuery(() => entries.get().result.filter((entry) => !entry.isCompleted));
+const completedEntries = cachedQuery(() => entries.get().result.filter((entry) => entry.isCompleted));
 
-const CONTEXT = Symbol();
-interface Context { [CONTEXT]: AppState; }
-const getAppState = (ctx: Context) => ctx[CONTEXT];
-
-export function appStateContext(state: AppState, c: VNode) {
-  return context({ [CONTEXT]: state }, c);
-}
-
-export type AppState = ReturnType<typeof createAppState>;
-
-export function createAppState() {
-  const entriesById = new Map<Number, Entry>();
-  const entries = cachedQuery(() => Array.from(entriesById.values()));
-  const activeEntries = cachedQuery(() => entries.get().filter((entry) => !entry.isCompleted));
-  const completedEntries = cachedQuery(() => entries.get().filter((entry) => entry.isCompleted));
-
-  return { filter: FilterType.All, entriesById, entries, activeEntries, completedEntries };
-}
-
-export const useFilter = selector((_: void, ctx: Context) => getAppState(ctx).filter);
-export const useEntries = selector((_: void, ctx: Context) => getAppState(ctx).entries.get());
-export const useCompletedEntries = selector((_: void, ctx: Context) => getAppState(ctx).completedEntries.get());
-export const useActiveEntries = selector((_: void, ctx: Context) => getAppState(ctx).activeEntries.get());
-export const useEntriesByFilterType = selector((filter: FilterType, ctx: Context) => {
-  const s = getAppState(ctx);
-  if (filter === FilterType.All) {
-    return s.entries.get();
+export const useEntries = selector(() => entries.get());
+export const useCompletedEntries = selector(() => completedEntries.get());
+export const useActiveEntries = selector(() => activeEntries.get());
+export const useEntriesByFilterType = selector((f: RouteLocation) => {
+  if (f === RouteLocation.All) {
+    return entries.get();
   }
-  if (filter === FilterType.Completed) {
-    return s.completedEntries.get();
+  if (f === RouteLocation.Completed) {
+    return completedEntries.get();
   }
-  return s.activeEntries.get();
+  return activeEntries.get();
 });
 
-function resetCompletedQueries(s: AppState) {
-  s.activeEntries.reset();
-  s.completedEntries.reset();
+function resetCompletedQueries() {
+  activeEntries.reset();
+  completedEntries.reset();
 }
 
-function resetQueries(s: AppState, completed?: boolean) {
-  s.entries.reset();
-  resetCompletedQueries(s);
+function resetQueries() {
+  entries.reset();
+  resetCompletedQueries();
 }
 
-export function addEntry(s: AppState, text: string) {
+const m = <T extends any[]>(fn: (...args: T) => void) => function () {
+  dirty();
+  fn.apply(void 0, arguments);
+} as (...args: T) => void;
+
+export const addEntry = m((text: string) => {
   const e = createEntry(text);
-  s.entriesById.set(e.id, e);
-  resetQueries(s);
-}
+  entriesById.set(e.id, e);
+  resetQueries();
+});
 
-export function removeEntry(s: AppState, entry: Entry) {
-  s.entriesById.delete(entry.id);
-  resetQueries(s);
-}
+export const removeEntry = m((entry: Entry) => {
+  entriesById.delete(entry.id);
+  resetQueries();
+});
 
-export function editEntry(s: AppState, entry: Entry, text: string) {
+export const editEntry = m((entry: Entry, text: string) => {
   entrySetText(entry, text);
-}
+});
 
-export function toggleCompleted(s: AppState, entry: Entry) {
+export const toggleCompleted = m((entry: Entry) => {
   entryToggleCompleted(entry);
-  resetCompletedQueries(s);
-}
+  resetCompletedQueries();
+});
 
-export function removeCompleted(s: AppState) {
-  const byId = s.entriesById;
-  byId.forEach((e) => {
+export const removeCompleted = m(() => {
+  entriesById.forEach((e) => {
     if (e.isCompleted) {
-      byId.delete(e.id);
+      entriesById.delete(e.id);
     }
   });
-  resetQueries(s);
-}
+  resetQueries();
+});
 
-export function toggleAll(s: AppState) {
-  const entries = Array.from(s.entriesById.values());
-  const areSomeActive = entries.some((e) => !e.isCompleted);
+export const toggleAll = m(() => {
+  const items = Array.from(entriesById.values());
+  const areSomeActive = items.some((e) => !e.isCompleted);
   let invalidateQueries = false;
-  entries.forEach((e) => {
+  items.forEach((e) => {
     if (e.isCompleted !== areSomeActive) {
       entryToggleCompleted(e);
       invalidateQueries = true;
     }
   });
   if (invalidateQueries) {
-    resetQueries(s);
+    resetQueries();
   }
-}
-
-export function setFilter(s: AppState, filter: FilterType) {
-  s.filter = filter;
-}
+});

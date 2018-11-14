@@ -5,15 +5,17 @@
   "scripts": {
     "build:routes": "ts-node -P ./routes/tsconfig.json ./routes/routes.config.ts > ./src/routes.ts",
     "serve": "webpack-serve --open --config webpack.dev.js",
+    "dist:rollup": "tsc && rollup -c rollup.config.js",
     "dist": "webpack --config webpack.prod.js",
-    "lint": "tslint --format codeFrame"
+    "lint": "tslint --format codeFrame",
+    "compress": "brotli --output=./dist/bundle.js.br ./dist/bundle.js"
   },
   "dependencies": {
-    "ivi": "^0.17.0-alpha.0",
-    "ivi-html": "^0.17.0-alpha.0",
-    "ivi-scheduler": "^0.17.0-alpha.0",
-    "ivi-state": "^0.17.0-alpha.0",
-    "routekit-resolver": "^0.4.1"
+    "ivi": "^0.17.0",
+    "ivi-html": "^0.17.0",
+    "ivi-router": "^0.3.0",
+    "ivi-scheduler": "^0.17.0",
+    "ivi-state": "^0.17.0"
   },
   "devDependencies": {
     "@types/node": "^10.12.2",
@@ -21,9 +23,13 @@
     "copy-webpack-plugin": "^4.6.0",
     "html-webpack-plugin": "^3.2.0",
     "ivi-tslint-rules": "^0.1.5",
-    "routekit": "^0.4.1",
-    "routekit-js": "^0.5.0",
+    "rollup": "^0.66.6",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "rollup-plugin-replace": "^2.1.0",
+    "rollup-plugin-terser": "^3.0.0",
+    "routekit": "^0.5.0",
     "source-map-loader": "^0.2.4",
+    "terser-webpack-plugin": "^1.1.0",
     "ts-loader": "^5.3.0",
     "ts-node": "^7.0.1",
     "tslib": "^1.9.3",

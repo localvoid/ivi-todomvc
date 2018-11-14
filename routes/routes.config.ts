@@ -1,25 +1,13 @@
-import { Builder, HttpMethod } from "routekit";
-import { inject } from "routekit-js";
-import { FilterType } from "../src/state";
+import { r, injector } from "routekit";
 import { writeFileSync, readFileSync } from "fs";
 
-const routes = new Builder();
-
-function r(name: string, path: string, data: FilterType) {
-  routes.add(name, path, HttpMethod.GET, JSON.stringify(data));
-}
-
-r("home", "/", FilterType.All);
-r("completed", "/completed", FilterType.Completed);
-r("active", "/active", FilterType.Active);
-
-const path = "./src/routes.ts";
+const path = "./src/state/location.ts";
 
 writeFileSync(
   path,
-  inject(
-    routes,
-    readFileSync(path).toString(),
-    { target: "ts" },
+  injector(readFileSync(path).toString())(
+    r("/", "RouteLocation.All"),
+    r("/completed", "RouteLocation.Completed"),
+    r("/active", "RouteLocation.Active"),
   ),
 );
