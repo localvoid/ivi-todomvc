@@ -1,5 +1,5 @@
 import {
-  component, invalidate, KeyCode, statelessComponent, map,
+  _, component, invalidate, KeyCode, statelessComponent, Events, TrackByKey, key,
   AUTOFOCUS,
   onKeyDown, onInput, onClick, onChange, onDoubleClick, onBlur, EventFlags, UpdateFlags,
 } from "ivi";
@@ -31,20 +31,24 @@ const Header = component((c) => {
   ];
 
   return () => (
-    header().c(
-      h1().t("todos"),
-      input("", {
-        id: "new-todo",
-        placeholder: "What needs to be done",
-        value: VALUE(_inputValue),
-        autofocus: AUTOFOCUS(true),
-      }).e(inputEvents),
-    )
+    header(_, _, [
+      h1(_, _, "todos"),
+      Events(inputEvents,
+        input("", {
+          id: "new-todo",
+          placeholder: "What needs to be done",
+          value: VALUE(_inputValue),
+          autofocus: AUTOFOCUS(true),
+        }),
+      ),
+    ])
   );
 });
 
 const FooterButton = (selected: boolean, href: string, text: string) => (
-  li().c(a(selected ? "selected" : "", { href }).t(text))
+  li(_, _,
+    a(selected ? "selected" : "", { href }, text),
+  )
 );
 
 const Footer = component((c) => {
@@ -60,19 +64,24 @@ const Footer = component((c) => {
     const completedCount = getCompletedEntries().result.length;
     const activeCount = listedCount - completedCount;
 
-    return footer("", { id: "footer" }).c(
-      ul("", { id: "filters" }).c(
-        FooterButton(filter === RouteLocation.All, "#/", "All"), " ",
-        FooterButton(filter === RouteLocation.Active, "#/active", "Active"), " ",
+    return footer("", { id: "footer" }, [
+      ul("", { id: "filters" }, [
+        FooterButton(filter === RouteLocation.All, "#/", "All"),
+        " ",
+        FooterButton(filter === RouteLocation.Active, "#/active", "Active"),
+        " ",
         FooterButton(filter === RouteLocation.Completed, "#/completed", "Completed"),
-      ),
-      span("", { id: "todo-count" }).c(
-        strong().t(activeCount > 0 ? activeCount : "No"), activeCount === 1 ? " item left" : " items left",
-      ),
+      ]),
+      span("", { id: "todo-count" }, [
+        strong(_, _, activeCount > 0 ? activeCount : "No"),
+        activeCount === 1 ? " item left" : " items left",
+      ]),
       (completedCount > 0) ?
-        button("", { id: "clear-completed" }).e(clearEvents).t(`Clear completed (${completedCount})`) :
+        Events(clearEvents,
+          button("", { id: "clear-completed" }, `Clear completed (${completedCount})`),
+        ) :
         null,
-    );
+    ]);
   };
 });
 
@@ -125,14 +134,24 @@ const EntryField = component<Entry>((c) => {
 
     li(_editing ?
       (entry.isCompleted ? "editing completed" : "editing") :
-      (entry.isCompleted ? "completed" : "")).c(
-        div("view").c(
-          input("toggle", { type: "checkbox", checked: CHECKED(entry.isCompleted) }).e(toggleEvents),
-          label().e(labelEvents).t(entry.text),
-          button("destroy").e(destroyEvents),
-        ),
-        _editing ? input("edit", { value: VALUE(_editText), autofocus: AUTOFOCUS(true) }).e(editEvents()) : null,
-      )
+      (entry.isCompleted ? "completed" : ""), _, [
+        div("view", _, [
+          Events(toggleEvents,
+            input("toggle", { type: "checkbox", checked: CHECKED(entry.isCompleted) }),
+          ),
+          Events(labelEvents,
+            label(_, _, entry.text),
+          ),
+          Events(destroyEvents,
+            button("destroy"),
+          ),
+        ]),
+        _editing ?
+          Events(editEvents(),
+            input("edit", { value: VALUE(_editText), autofocus: AUTOFOCUS(true) }),
+          ) :
+          null,
+      ])
   );
 });
 
@@ -140,8 +159,8 @@ const EntryList = component((c) => {
   const getFilter = useLocation(c);
   const getEntriesByFilterType = useEntriesByFilterType(c);
 
-  return () => ul("", { id: "todo-list" }).c(
-    map(getEntriesByFilterType(getFilter()).result, (e) => EntryField(e).k(e.id)),
+  return () => ul("", { id: "todo-list" },
+    TrackByKey(getEntriesByFilterType(getFilter()).result.map((e) => key(e.id, EntryField(e)))),
   );
 });
 
@@ -150,16 +169,25 @@ const ToggleAllView = component((c) => {
   const getCompletedEntries = useCompletedEntries(c);
   const inputEvents = onChange(() => (toggleAll(), EventFlags.PreventDefault));
 
-  return () => input("",
-    {
-      id: "toggle-all",
-      type: "checkbox",
-      checked: CHECKED(getEntries().result.length === getCompletedEntries().result.length),
-    },
-  ).e(inputEvents);
+  return () => (
+    Events(inputEvents,
+      input("",
+        {
+          id: "toggle-all",
+          type: "checkbox",
+          checked: CHECKED(getEntries().result.length === getCompletedEntries().result.length),
+        },
+      ),
+    )
+  );
 });
 
-const Main = statelessComponent(() => section("", { id: "main" }).c(ToggleAllView(), EntryList()));
+const Main = statelessComponent(() => (
+  section("", { id: "main" }, [
+    ToggleAllView(),
+    EntryList(),
+  ])
+));
 
 export const App = component((c) => {
   let _count: number;
@@ -168,10 +196,10 @@ export const App = component((c) => {
   return () => (
     _count = getEntries().result.length,
 
-    section().c(
+    section(_, _, [
       Header(),
       _count ? Main() : null,
       _count ? Footer() : null,
-    )
+    ])
   );
 });
