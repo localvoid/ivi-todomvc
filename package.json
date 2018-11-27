@@ -13,7 +13,7 @@
   "dependencies": {
     "ivi": "^0.18.0",
     "ivi-html": "^0.18.0",
-    "ivi-router": "^0.3.0",
+    "ivi-router": "^0.4.0",
     "ivi-scheduler": "^0.18.0",
     "ivi-state": "^0.18.0"
   },
@@ -35,7 +35,7 @@
     "tslib": "^1.9.3",
     "tslint": "^5.11.0",
     "typescript": "^3.1.6",
-    "webpack": "^4.26.0",
+    "webpack": "^4.26.1",
     "webpack-cli": "^3.1.2",
     "webpack-merge": "^4.1.4",
     "webpack-serve": "^2.0.3"

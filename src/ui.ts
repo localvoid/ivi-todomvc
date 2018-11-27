@@ -25,8 +25,7 @@ const Header = component((c) => {
       }
     }),
     onInput((ev) => {
-      _inputValue = (ev.target as HTMLInputElement).value;
-      invalidate(c, UpdateFlags.RequestSyncUpdate);
+      _inputValue = (ev.native.target as HTMLInputElement).value;
     }),
   ];
 
@@ -102,7 +101,7 @@ const EntryField = component<Entry>((c) => {
 
   const editEvents = lazy(() => [
     onInput((ev) => {
-      _editText = (ev.target as HTMLInputElement).value;
+      _editText = (ev.native.target as HTMLInputElement).value;
     }),
     onBlur((ev) => {
       _editText = "";
