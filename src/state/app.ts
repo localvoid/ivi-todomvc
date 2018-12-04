@@ -33,7 +33,7 @@ function resetQueries() {
 
 const m = <T extends any[]>(fn: (...args: T) => void) => function () {
   dirty();
-  fn.apply(void 0, arguments);
+  fn.apply(void 0, arguments as any);
 } as (...args: T) => void;
 
 export const addEntry = m((text: string) => {

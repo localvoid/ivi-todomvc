@@ -18,9 +18,8 @@ const Header = component((c) => {
   const inputEvents = [
     onKeyDown((ev) => {
       if (ev.native.keyCode === KeyCode.Enter) {
-        const v = _inputValue;
+        addEntry(_inputValue);
         _inputValue = "";
-        addEntry(v);
         invalidate(c, UpdateFlags.RequestSyncUpdate);
       }
     }),
@@ -33,7 +32,7 @@ const Header = component((c) => {
     header(_, _, [
       h1(_, _, "todos"),
       Events(inputEvents,
-        input("", {
+        input(_, {
           id: "new-todo",
           placeholder: "What needs to be done",
           value: VALUE(_inputValue),
@@ -46,7 +45,7 @@ const Header = component((c) => {
 
 const FooterButton = (selected: boolean, href: string, text: string) => (
   li(_, _,
-    a(selected ? "selected" : "", { href }, text),
+    a(selected ? "selected" : _, { href }, text),
   )
 );
 
@@ -63,21 +62,21 @@ const Footer = component((c) => {
     const completedCount = getCompletedEntries().result.length;
     const activeCount = listedCount - completedCount;
 
-    return footer("", { id: "footer" }, [
-      ul("", { id: "filters" }, [
+    return footer(_, { id: "footer" }, [
+      ul(_, { id: "filters" }, [
         FooterButton(filter === RouteLocation.All, "#/", "All"),
         " ",
         FooterButton(filter === RouteLocation.Active, "#/active", "Active"),
         " ",
         FooterButton(filter === RouteLocation.Completed, "#/completed", "Completed"),
       ]),
-      span("", { id: "todo-count" }, [
+      span(_, { id: "todo-count" }, [
         strong(_, _, activeCount > 0 ? activeCount : "No"),
         activeCount === 1 ? " item left" : " items left",
       ]),
       (completedCount > 0) ?
         Events(clearEvents,
-          button("", { id: "clear-completed" }, `Clear completed (${completedCount})`),
+          button(_, { id: "clear-completed" }, `Clear completed (${completedCount})`),
         ) :
         null,
     ]);
@@ -158,7 +157,7 @@ const EntryList = component((c) => {
   const getFilter = useLocation(c);
   const getEntriesByFilterType = useEntriesByFilterType(c);
 
-  return () => ul("", { id: "todo-list" },
+  return () => ul(_, { id: "todo-list" },
     TrackByKey(getEntriesByFilterType(getFilter()).result.map((e) => key(e.id, EntryField(e)))),
   );
 });
@@ -170,35 +169,31 @@ const ToggleAllView = component((c) => {
 
   return () => (
     Events(inputEvents,
-      input("",
-        {
-          id: "toggle-all",
-          type: "checkbox",
-          checked: CHECKED(getEntries().result.length === getCompletedEntries().result.length),
-        },
-      ),
+      input(_, {
+        id: "toggle-all",
+        type: "checkbox",
+        checked: CHECKED(getEntries().result.length === getCompletedEntries().result.length),
+      }),
     )
   );
 });
 
 const Main = statelessComponent(() => (
-  section("", { id: "main" }, [
+  section(_, { id: "main" }, [
     ToggleAllView(),
     EntryList(),
   ])
 ));
 
 export const App = component((c) => {
-  let _count: number;
   const getEntries = useEntries(c);
-
   return () => (
-    _count = getEntries().result.length,
-
     section(_, _, [
       Header(),
-      _count ? Main() : null,
-      _count ? Footer() : null,
+      getEntries().result.length ? [
+        Main(),
+        Footer(),
+      ] : null,
     ])
   );
 });
