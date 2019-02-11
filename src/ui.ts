@@ -29,12 +29,11 @@ const Header = component((c) => {
   ];
 
   return () => (
-    header(_, _, [
+    header("header", _, [
       h1(_, _, "todos"),
       Events(inputEvents,
-        input(_, {
-          id: "new-todo",
-          placeholder: "What needs to be done",
+        input("new-todo", {
+          placeholder: "What needs to be done?",
           value: VALUE(_inputValue),
           autofocus: AUTOFOCUS(true),
         }),
@@ -62,21 +61,19 @@ const Footer = component((c) => {
     const completedCount = getCompletedEntries().result.length;
     const activeCount = listedCount - completedCount;
 
-    return footer(_, { id: "footer" }, [
-      ul(_, { id: "filters" }, [
+    return footer("footer", _, [
+      ul("filters", _, [
         FooterButton(filter === RouteLocation.All, "#/", "All"),
-        " ",
         FooterButton(filter === RouteLocation.Active, "#/active", "Active"),
-        " ",
         FooterButton(filter === RouteLocation.Completed, "#/completed", "Completed"),
       ]),
-      span(_, { id: "todo-count" }, [
+      span("todo-count", _, [
         strong(_, _, activeCount > 0 ? activeCount : "No"),
         activeCount === 1 ? " item left" : " items left",
       ]),
       (completedCount > 0) ?
         Events(clearEvents,
-          button(_, { id: "clear-completed" }, `Clear completed (${completedCount})`),
+          button("clear-completed", _, `Clear completed (${completedCount})`),
         ) :
         null,
     ]);
@@ -157,7 +154,7 @@ const EntryList = component((c) => {
   const getFilter = useLocation(c);
   const getEntriesByFilterType = useEntriesByFilterType(c);
 
-  return () => ul(_, { id: "todo-list" },
+  return () => ul("todo-list", _,
     TrackByKey(getEntriesByFilterType(getFilter()).result.map((e) => key(e.id, EntryField(e)))),
   );
 });
@@ -167,19 +164,20 @@ const ToggleAllView = component((c) => {
   const getCompletedEntries = useCompletedEntries(c);
   const inputEvents = onChange(() => (toggleAll(), EventFlags.PreventDefault));
 
-  return () => (
+  return () => [
     Events(inputEvents,
-      input(_, {
+      input("toggle-all", {
         id: "toggle-all",
         type: "checkbox",
         checked: CHECKED(getEntries().result.length === getCompletedEntries().result.length),
       }),
-    )
-  );
+    ),
+    label(_, { for: "toggle-all" }, "Mark all as complete"),
+  ];
 });
 
 const Main = statelessComponent(() => (
-  section(_, { id: "main" }, [
+  section("main", _, [
     ToggleAllView(),
     EntryList(),
   ])
@@ -187,13 +185,11 @@ const Main = statelessComponent(() => (
 
 export const App = component((c) => {
   const getEntries = useEntries(c);
-  return () => (
-    section(_, _, [
-      Header(),
-      getEntries().result.length ? [
-        Main(),
-        Footer(),
-      ] : null,
-    ])
-  );
+  return () => [
+    Header(),
+    getEntries().result.length ? [
+      Main(),
+      Footer(),
+    ] : null,
+  ];
 });
