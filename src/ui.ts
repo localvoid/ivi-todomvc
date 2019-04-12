@@ -1,7 +1,7 @@
 import {
   _, component, invalidate, KeyCode, statelessComponent, Events, TrackByKey, key,
   AUTOFOCUS,
-  onKeyDown, onInput, onClick, onChange, onDoubleClick, onBlur, EventFlags, UpdateFlags,
+  onKeyDown, onInput, onClick, onChange, onDoubleClick, onBlur, UpdateFlags,
 } from "ivi";
 import {
   header, h1, input, a, li, footer, ul, span, strong, button, div, label, section, VALUE, CHECKED,
@@ -17,14 +17,14 @@ const Header = component((c) => {
 
   const inputEvents = [
     onKeyDown((ev) => {
-      if (ev.native.keyCode === KeyCode.Enter) {
+      if (ev.keyCode === KeyCode.Enter) {
         addEntry(_inputValue);
         _inputValue = "";
         invalidate(c, UpdateFlags.RequestSyncUpdate);
       }
     }),
     onInput((ev) => {
-      _inputValue = (ev.native.target as HTMLInputElement).value;
+      _inputValue = (ev.target as HTMLInputElement).value;
     }),
   ];
 
@@ -53,7 +53,10 @@ const Footer = component((c) => {
   const getEntries = useEntries(c);
   const getCompletedEntries = useCompletedEntries(c);
 
-  const clearEvents = onClick(() => (removeCompleted(), EventFlags.PreventDefault));
+  const clearEvents = onClick((ev) => {
+    ev.preventDefault();
+    removeCompleted();
+  });
 
   return () => {
     const filter = getFilter();
@@ -86,8 +89,14 @@ const EntryField = component<Entry>((c) => {
   let _editing = false;
 
   const dirtyCheckEntry = useEntry(c);
-  const destroyEvents = onClick(() => (removeEntry(_entry), EventFlags.PreventDefault));
-  const toggleEvents = onChange(() => (toggleCompleted(_entry), EventFlags.PreventDefault));
+  const destroyEvents = onClick((ev) => {
+    ev.preventDefault();
+    removeEntry(_entry);
+  });
+  const toggleEvents = onChange((ev) => {
+    ev.preventDefault();
+    toggleCompleted(_entry);
+  });
 
   const labelEvents = onDoubleClick((ev) => {
     _editText = _entry.text;
@@ -97,7 +106,7 @@ const EntryField = component<Entry>((c) => {
 
   const editEvents = lazy(() => [
     onInput((ev) => {
-      _editText = (ev.native.target as HTMLInputElement).value;
+      _editText = (ev.target as HTMLInputElement).value;
     }),
     onBlur((ev) => {
       _editText = "";
@@ -105,7 +114,7 @@ const EntryField = component<Entry>((c) => {
       invalidate(c);
     }, true),
     onKeyDown((ev) => {
-      switch (ev.native.keyCode) {
+      switch (ev.keyCode) {
         case (KeyCode.Enter): {
           const v = _editText;
           _editText = "";
@@ -162,7 +171,10 @@ const EntryList = component((c) => {
 const ToggleAllView = component((c) => {
   const getEntries = useEntries(c);
   const getCompletedEntries = useCompletedEntries(c);
-  const inputEvents = onChange(() => (toggleAll(), EventFlags.PreventDefault));
+  const inputEvents = onChange((ev) => {
+    ev.preventDefault();
+    toggleAll();
+  });
 
   return () => [
     Events(inputEvents,

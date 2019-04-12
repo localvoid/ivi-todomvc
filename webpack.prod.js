@@ -41,8 +41,7 @@ module.exports = merge(require("./webpack.common"), {
   },
   plugins: [
     new webpack.DefinePlugin({
-      "__IVI_DEBUG__": "false",
-      "__IVI_TARGET__": JSON.stringify("browser"),
+      "process.env.IVI_TARGET": `"browser"`,
     }),
     new CopyWebpackPlugin([
       { from: "assets/", to: "" },

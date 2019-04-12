@@ -1,16 +1,17 @@
 import { requestDirtyCheck, selector } from "ivi";
-import { setupHashRouter } from "ivi-router";
 
 export const enum RouteLocation { All, Completed, Active }
 
-// routekit:emit("routes")
-const ROUTES = {
-  f: [67, 7, 7],
-  p: ["completed", "active"],
-  s: [RouteLocation.All, RouteLocation.Completed, RouteLocation.Active],
-};
-// routekit:end
+let state = RouteLocation.All;
+addEventListener("hashchange", () => {
+  const { hash } = location;
+  state = RouteLocation.All;
+  if (hash === "#/active") {
+    state = RouteLocation.Active;
+  } else if (hash === "#/completed") {
+    state = RouteLocation.Completed;
+  }
+  requestDirtyCheck();
+});
 
-const router = setupHashRouter<RouteLocation>(ROUTES, RouteLocation.All, () => { requestDirtyCheck(); });
-
-export const useLocation = selector(() => router.state);
+export const useLocation = selector(() => state);
