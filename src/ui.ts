@@ -1,5 +1,5 @@
 import {
-  _, component, invalidate, KeyCode, statelessComponent, Events, TrackByKey, key,
+  _, component, invalidate, KeyCode, Events, TrackByKey, key,
   AUTOFOCUS,
   onKeyDown, onInput, onClick, onChange, onDoubleClick, onBlur, UpdateFlags,
 } from "ivi";
@@ -52,11 +52,7 @@ const Footer = component((c) => {
   const getFilter = useLocation(c);
   const getEntries = useEntries(c);
   const getCompletedEntries = useCompletedEntries(c);
-
-  const clearEvents = onClick((ev) => {
-    ev.preventDefault();
-    removeCompleted();
-  });
+  const clearEvents = onClick(() => { removeCompleted(); });
 
   return () => {
     const filter = getFilter();
@@ -85,22 +81,14 @@ const Footer = component((c) => {
 
 const EntryField = component<Entry>((c) => {
   let _entry: Entry;
-  let _editText = "";
-  let _editing = false;
+  let _editText: string | null = null;
 
   const dirtyCheckEntry = useEntry(c);
-  const destroyEvents = onClick((ev) => {
-    ev.preventDefault();
-    removeEntry(_entry);
-  });
-  const toggleEvents = onChange((ev) => {
-    ev.preventDefault();
-    toggleCompleted(_entry);
-  });
+  const destroyEvents = onClick(() => { removeEntry(_entry); });
+  const toggleEvents = onChange(() => { toggleCompleted(_entry); });
 
-  const labelEvents = onDoubleClick((ev) => {
+  const labelEvents = onDoubleClick(() => {
     _editText = _entry.text;
-    _editing = true;
     invalidate(c);
   });
 
@@ -108,24 +96,20 @@ const EntryField = component<Entry>((c) => {
     onInput((ev) => {
       _editText = (ev.target as HTMLInputElement).value;
     }),
-    onBlur((ev) => {
-      _editText = "";
-      _editing = false;
+    onBlur(() => {
+      _editText = null;
       invalidate(c);
-    }, true),
+    }),
     onKeyDown((ev) => {
       switch (ev.keyCode) {
         case (KeyCode.Enter): {
-          const v = _editText;
-          _editText = "";
-          _editing = false;
-          editEntry(_entry, v);
+          editEntry(_entry, _editText as string);
+          _editText = null;
           invalidate(c);
           break;
         }
         case (KeyCode.Escape):
-          _editText = "";
-          _editing = false;
+          _editText = null;
           invalidate(c);
           break;
       }
@@ -136,7 +120,7 @@ const EntryField = component<Entry>((c) => {
     dirtyCheckEntry(entry),
     _entry = entry,
 
-    li(_editing ?
+    li(_editText !== null ?
       (entry.isCompleted ? "editing completed" : "editing") :
       (entry.isCompleted ? "completed" : ""), _, [
         div("view", _, [
@@ -150,7 +134,7 @@ const EntryField = component<Entry>((c) => {
             button("destroy"),
           ),
         ]),
-        _editing ?
+        _editText !== null ?
           Events(editEvents(),
             input("edit", { value: VALUE(_editText), autofocus: AUTOFOCUS(true) }),
           ) :
@@ -188,19 +172,19 @@ const ToggleAllView = component((c) => {
   ];
 });
 
-const Main = statelessComponent(() => (
+const Main = (
   section("main", _, [
     ToggleAllView(),
     EntryList(),
   ])
-));
+);
 
 export const App = component((c) => {
   const getEntries = useEntries(c);
   return () => [
     Header(),
     getEntries().result.length ? [
-      Main(),
+      Main,
       Footer(),
     ] : null,
   ];

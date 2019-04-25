@@ -3,7 +3,7 @@ import { cachedQuery } from "ivi-state";
 import { RouteLocation } from "./location";
 import { Entry, createEntry, entrySetText, entryToggleCompleted } from "./entry";
 
-const entriesById = new Map<Number, Entry>();
+const entriesById = new Map<number, Entry>();
 const entries = cachedQuery(() => Array.from(entriesById.values()));
 const activeEntries = cachedQuery(() => entries.get().result.filter((entry) => !entry.isCompleted));
 const completedEntries = cachedQuery(() => entries.get().result.filter((entry) => entry.isCompleted));
