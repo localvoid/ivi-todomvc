@@ -6,7 +6,6 @@ import {
 import {
   header, h1, input, a, li, footer, ul, span, strong, button, div, label, section, VALUE, CHECKED,
 } from "ivi-html";
-import { lazy } from "ivi-state";
 import {
   RouteLocation, addEntry, removeCompleted, removeEntry, toggleCompleted, editEntry, toggleAll, useLocation,
   useEntries, useCompletedEntries, Entry, useEntry, useEntriesByFilterType,
@@ -15,23 +14,20 @@ import {
 const Header = component((c) => {
   let _inputValue = "";
 
-  const inputEvents = [
-    onKeyDown((ev) => {
-      if (ev.keyCode === KeyCode.Enter) {
-        addEntry(_inputValue);
-        _inputValue = "";
-        invalidate(c, UpdateFlags.RequestSyncUpdate);
-      }
-    }),
-    onInput((ev) => {
-      _inputValue = (ev.target as HTMLInputElement).value;
-    }),
-  ];
-
   return () => (
     header("header", _, [
       h1(_, _, "todos"),
-      Events(inputEvents,
+      Events([
+        onKeyDown((ev) => {
+          if (ev.keyCode === KeyCode.Enter) {
+            addEntry(_inputValue);
+            _inputValue = "";
+            invalidate(c, UpdateFlags.RequestSyncUpdate);
+          }
+        }),
+        onInput((ev) => {
+          _inputValue = (ev.target as HTMLInputElement).value;
+        })],
         input("new-todo", {
           placeholder: "What needs to be done?",
           value: VALUE(_inputValue),
@@ -52,13 +48,11 @@ const Footer = component((c) => {
   const getFilter = useLocation(c);
   const getEntries = useEntries(c);
   const getCompletedEntries = useCompletedEntries(c);
-  const clearEvents = onClick(() => { removeCompleted(); });
 
   return () => {
     const filter = getFilter();
-    const listedCount = getEntries().result.length;
     const completedCount = getCompletedEntries().result.length;
-    const activeCount = listedCount - completedCount;
+    const activeCount = getEntries().result.length - completedCount;
 
     return footer("footer", _, [
       ul("filters", _, [
@@ -71,7 +65,7 @@ const Footer = component((c) => {
         activeCount === 1 ? " item left" : " items left",
       ]),
       (completedCount > 0) ?
-        Events(clearEvents,
+        Events(onClick(() => { removeCompleted(); }),
           button("clear-completed", _, `Clear completed (${completedCount})`),
         ) :
         null,
@@ -80,62 +74,48 @@ const Footer = component((c) => {
 });
 
 const EntryField = component<Entry>((c) => {
-  let _entry: Entry;
   let _editText: string | null = null;
-
   const dirtyCheckEntry = useEntry(c);
-  const destroyEvents = onClick(() => { removeEntry(_entry); });
-  const toggleEvents = onChange(() => { toggleCompleted(_entry); });
-
-  const labelEvents = onDoubleClick(() => {
-    _editText = _entry.text;
+  const stopEditing = () => {
+    _editText = null;
     invalidate(c);
-  });
-
-  const editEvents = lazy(() => [
-    onInput((ev) => {
-      _editText = (ev.target as HTMLInputElement).value;
-    }),
-    onBlur(() => {
-      _editText = null;
-      invalidate(c);
-    }),
-    onKeyDown((ev) => {
-      switch (ev.keyCode) {
-        case (KeyCode.Enter): {
-          editEntry(_entry, _editText as string);
-          _editText = null;
-          invalidate(c);
-          break;
-        }
-        case (KeyCode.Escape):
-          _editText = null;
-          invalidate(c);
-          break;
-      }
-    }),
-  ]);
+  };
 
   return (entry) => (
     dirtyCheckEntry(entry),
-    _entry = entry,
 
     li(_editText !== null ?
       (entry.isCompleted ? "editing completed" : "editing") :
       (entry.isCompleted ? "completed" : ""), _, [
         div("view", _, [
-          Events(toggleEvents,
+          Events(onChange(() => { toggleCompleted(entry); }),
             input("toggle", { type: "checkbox", checked: CHECKED(entry.isCompleted) }),
           ),
-          Events(labelEvents,
+          Events(
+            onDoubleClick(() => {
+              _editText = entry.text;
+              invalidate(c);
+            }),
             label(_, _, entry.text),
           ),
-          Events(destroyEvents,
+          Events(onClick(() => { removeEntry(entry); }),
             button("destroy"),
           ),
         ]),
         _editText !== null ?
-          Events(editEvents(),
+          Events([
+            onInput((ev) => {
+              _editText = (ev.target as HTMLInputElement).value;
+            }),
+            onBlur(stopEditing),
+            onKeyDown(({ keyCode }) => {
+              if (keyCode === KeyCode.Enter || keyCode === KeyCode.Escape) {
+                if (keyCode === KeyCode.Enter) {
+                  editEntry(entry, _editText!);
+                }
+                stopEditing();
+              }
+            })],
             input("edit", { value: VALUE(_editText), autofocus: AUTOFOCUS(true) }),
           ) :
           null,
@@ -155,14 +135,14 @@ const EntryList = component((c) => {
 const ToggleAllView = component((c) => {
   const getEntries = useEntries(c);
   const getCompletedEntries = useCompletedEntries(c);
-  const inputEvents = onChange((ev) => {
-    ev.preventDefault();
-    toggleAll();
-  });
 
   return () => [
-    Events(inputEvents,
-      input("toggle-all", {
+    Events(
+      onChange((ev) => {
+        ev.preventDefault();
+        toggleAll();
+      }),
+      input(_, {
         id: "toggle-all",
         type: "checkbox",
         checked: CHECKED(getEntries().result.length === getCompletedEntries().result.length),
@@ -172,19 +152,15 @@ const ToggleAllView = component((c) => {
   ];
 });
 
-const Main = (
-  section("main", _, [
-    ToggleAllView(),
-    EntryList(),
-  ])
-);
-
 export const App = component((c) => {
   const getEntries = useEntries(c);
   return () => [
     Header(),
     getEntries().result.length ? [
-      Main,
+      section("main", _, [
+        ToggleAllView(),
+        EntryList(),
+      ]),
       Footer(),
     ] : null,
   ];
